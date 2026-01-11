@@ -1,0 +1,246 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Profile | Eduke Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    <link rel="icon" type="image/png" href="{% static 'images/logobase_white.png' %}">
+
+    <script>
+        // Immediate Theme Application to prevent "flash" of white
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* The Purple-Violet Mesh Background */
+        .mesh-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-color: #f8fafc;
+            background-image:
+                radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.15) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.1) 0, transparent 50%);
+        }
+
+        .dark .mesh-bg {
+            background-color: #020617;
+            background-image:
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.2) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(79, 0, 116, 0.25) 0, transparent 50%);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .sidebar {
+            background: linear-gradient(135deg, #4f0074 0%, #8a2be2 100%);
+            color: white;
+        }
+        .sidebar a {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .sidebar a:hover {
+            color: white;
+        }
+        .content-area {
+            background-color: #f8fafc;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .profile-header {
+            background: linear-gradient(135deg, #4f0074 0%, #8a2be2 100%);
+            color: white;
+            border-radius: 10px 10px 0 0;
+        }
+        .error-message {
+            background-color: #fee;
+            border-left: 4px solid #e53e3e;
+            color: #c53030;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .success-message {
+            background-color: #efe;
+            border-left: 4px solid #38a169;
+            color: #2f855a;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+</head>
+
+<body class="antialiased text-slate-900 dark:text-slate-100 min-h-screen flex">
+    <div class="mesh-bg"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar w-64 min-h-screen p-4">
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold flex items-center">
+                <i class="fas fa-graduation-cap mr-2"></i>
+                Eduke
+            </h1>
+            <p class="text-sm opacity-75">Student Portal</p>
+        </div>
+        
+        <nav class="space-y-2">
+            <a href="{% url 'student:dashboard' %}" class="block py-2 px-4 rounded hover:bg-white hover:bg-opacity-20">
+                <i class="fas fa-tachometer-alt mr-2"></i>
+                Dashboard
+            </a>
+            <a href="{% url 'student:profile' %}" class="block py-2 px-4 rounded hover:bg-white hover:bg-opacity-20 active:bg-white bg-opacity-30">
+                <i class="fas fa-user mr-2"></i>
+                Profile
+            </a>
+            <a href="#" class="block py-2 px-4 rounded hover:bg-white hover:bg-opacity-20">
+                <i class="fas fa-book mr-2"></i>
+                My Subjects
+            </a>
+            <a href="#" class="block py-2 px-4 rounded hover:bg-white hover:bg-opacity-20">
+                <i class="fas fa-calendar mr-2"></i>
+                Schedule
+            </a>
+            <a href="#" class="block py-2 px-4 rounded hover:bg-white hover:bg-opacity-20">
+                <i class="fas fa-file-alt mr-2"></i>
+                Assignments
+            </a>
+            <a href="#" class="block py-2 px-4 rounded hover:bg-white hover:bg-opacity-20">
+                <i class="fas fa-chart-bar mr-2"></i>
+                Grades
+            </a>
+            <a href="#" class="block py-2 px-4 rounded hover:bg-white hover:bg-opacity-20">
+                <i class="fas fa-cog mr-2"></i>
+                Settings
+            </a>
+            <a href="{% url 'logout' %}" class="block py-2 px-4 rounded hover:bg-white hover:bg-opacity-20 text-red-200">
+                <i class="fas fa-sign-out-alt mr-2"></i>
+                Logout
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 content-area p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Student Profile</h2>
+            <div class="flex items-center space-x-4">
+                <div class="text-right">
+                    <p class="font-medium text-slate-700 dark:text-slate-200">{{ student.first_name }} {{ student.last_name }}</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-300">{{ student.roll_no }} | {{ student.class_obj.class_name }}</p>
+                </div>
+                <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                    {{ student.first_name.0|upper }}{{ student.last_name.0|upper }}
+                </div>
+            </div>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 {% if message.tags == 'error' %}error-message{% else %}success-message{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Profile Card -->
+        <div class="card max-w-2xl mx-auto">
+            <div class="profile-header p-6">
+                <div class="flex items-center">
+                    <div class="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white text-2xl font-bold mr-4">
+                        {{ student.first_name.0|upper }}{{ student.last_name.0|upper }}
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold">{{ student.first_name }} {{ student.last_name }}</h3>
+                        <p class="opacity-90">{{ student.class_obj.class_name }} | {{ student.roll_no }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">First Name</label>
+                        <p class="text-lg text-slate-800 dark:text-slate-200">{{ student.first_name }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Last Name</label>
+                        <p class="text-lg text-slate-800 dark:text-slate-200">{{ student.last_name }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Roll Number</label>
+                        <p class="text-lg text-slate-800 dark:text-slate-200">{{ student.roll_no }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Class</label>
+                        <p class="text-lg text-slate-800 dark:text-slate-200">{{ student.class_obj.class_name }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+                        <p class="text-lg text-slate-800 dark:text-slate-200">{{ student.email|default:"Not provided" }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Account Type</label>
+                        <p class="text-lg text-slate-800 dark:text-slate-200">Student</p>
+                    </div>
+                </div>
+                
+                <div class="mt-8">
+                    <h4 class="text-lg font-semibold mb-4 text-slate-800 dark:text-slate-200">Account Information</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg dark:bg-slate-800">
+                        <p class="text-sm text-slate-600 dark:text-slate-300"><i class="fas fa-info-circle mr-2"></i> Your account was created as part of the institutional student database.</p>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 mt-2"><i class="fas fa-lock mr-2"></i> Password management is handled by your institution.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-hide success messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const successMessages = document.querySelectorAll('.success-message');
+            successMessages.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.opacity = '0';
+                    setTimeout(function() {
+                        message.style.display = 'none';
+                    }, 300);
+                }, 5000);
+            });
+        });
+    </script>
+</body>
+</html>

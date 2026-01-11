@@ -1,0 +1,378 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>User Portal | Eduke Intelligence</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    <link rel="icon" type="image/png" href="{% static 'images/logobase_white.png' %}">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f0074',
+                        accent: '#7c00b5',
+                        surface: '#fdfaff',
+                    },
+                    borderRadius: {
+                        '4xl': '2rem',
+                        '5xl': '3rem',
+                    }
+                }
+            }
+        }
+
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            width: 100%;
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        body::-webkit-scrollbar {
+            display: none;
+        }
+
+        .mesh-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 10% 20%, rgba(124, 0, 181, 0.05) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 80%, rgba(79, 0, 116, 0.05) 0%, transparent 40%);
+        }
+
+        .dark .mesh-bg {
+            background:
+                radial-gradient(circle at 0% 0%, rgba(124, 0, 181, 0.2) 0, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(15, 23, 42, 1) 0, transparent 50%);
+        }
+        
+        /* Theme-based colors */
+        .theme-primary {
+            color: #4f0074;
+        }
+        
+        .dark .theme-primary {
+            color: #a855f7;
+        }
+        
+        .theme-accent {
+            color: #7c00b5;
+        }
+        
+        .dark .theme-accent {
+            color: #c084fc;
+        }
+        
+        .dark .text-slate-100 {
+            color: #f1f5f9;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- Logo Twist Animation --- */
+        .logo-container {
+            position: relative;
+            width: 24px;
+            height: 24px;
+            perspective: 1000px;
+        }
+
+        .logo-flipper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            animation: autoTwist 6s infinite;
+        }
+
+        /* Forces home icon on hover */
+        #logo-home-link:hover .logo-flipper {
+            transform: rotateY(180deg);
+            animation: none;
+        }
+
+        .logo-front, .logo-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-back {
+            transform: rotateY(180deg);
+        }
+
+        @keyframes autoTwist {
+            0%, 80% { transform: rotateY(0deg); }
+            90%, 100% { transform: rotateY(180deg); }
+        }
+
+        /* Logo color for Light Theme (Purple) and Dark Theme (White) */
+        .theme-logo {
+            filter: invert(31%) sepia(29%) saturate(603%) hue-rotate(254deg) brightness(94%) contrast(93%);
+        }
+        .dark .theme-logo {
+            filter: brightness(0) invert(1);
+        }
+
+        /* Portal Grid Fixes */
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .portal-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 220px;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .portal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .portal-card:hover::before {
+            left: 100%;
+        }
+
+        .portal-card:hover {
+            transform: translateY(-12px) scale(1.03);
+            background: white !important;
+            border-color: #7c00b5;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .dark .portal-card:hover {
+            background: rgba(15, 23, 42, 1) !important;
+            box-shadow: 0 40px 80px -20px rgba(124, 0, 181, 0.15);
+        }
+
+        .portal-card i {
+            transition: transform 0.3s ease;
+        }
+
+        .portal-card:hover i {
+            transform: scale(1.2);
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #4f0074 0%, #a855f7 50%, #7c00b5 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 5s linear infinite;
+        }
+        
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        /* Custom Cursor */
+        #cursor-dot, #cursor-outline {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+        @media (min-width: 1024px) {
+            #cursor-dot { display: block; width: 8px; height: 8px; background: #7c00b5; }
+            #cursor-outline { display: block; width: 40px; height: 40px; border: 2px solid rgba(124, 0, 181, 0.3); transition: width 0.3s, height 0.3s; }
+            body { cursor: none; }
+        }
+    </style>
+</head>
+
+<body class="antialiased bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col">
+    
+    <div id="cursor-dot"></div>
+    <div id="cursor-outline"></div>
+    <div class="mesh-bg"></div>
+
+    <div class="fixed top-6 left-6 z-[100] flex items-center space-x-4">
+        <a href="{% url 'index' %}" id="logo-home-link" class="glass-card p-4 rounded-2xl transition-all group" title="Go to Home">
+            <div class="logo-container">
+                <div class="logo-flipper">
+                    <div class="logo-front">
+                        <img src="{% static 'images/logobase_white.png' %}" alt="Eduke" class="w-full h-full object-contain theme-logo">
+                    </div>
+                    <div class="logo-back">
+                        <i class="fas fa-home text-purple-500 dark:text-purple-400 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+        <button id="theme-toggle" class="glass-card p-4 rounded-2xl transition-all hover:scale-110 active:scale-95" title="Toggle Theme">
+            <i id="theme-icon" class="fas fa-moon text-purple-600 dark:text-yellow-400 text-xl"></i>
+        </button>
+    </div>
+
+    <main class="flex-grow flex items-center justify-center px-6 py-24">
+        <div class="w-full max-w-7xl">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tight floating">
+                    <span class="text-gradient">User Portals</span>
+                </h1>
+                <p class="text-lg opacity-70 max-w-2xl mx-auto">
+                    Choose your destination. Our specialized dashboards provide the exact tools you need for your specific role.
+                </p>
+            </div>
+
+            <div class="portal-grid">
+                <a href="{% url 'institution:login' %}" class="portal-card glass-card p-8 rounded-[2.5rem]" data-aos="fade-up" data-aos-delay="100">
+                    <div class="w-20 h-20 bg-purple-100 dark:bg-purple-900/30 rounded-3xl flex items-center justify-center mb-6">
+                        <i class="fas fa-tower-observation text-purple-600 dark:text-purple-400 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-1">Institution</h3>
+                    <p class="text-sm opacity-60">Admin & Governance</p>
+                </a>
+
+                <a href="{% url 'student:login' %}" class="portal-card glass-card p-8 rounded-[2.5rem]" data-aos="fade-up" data-aos-delay="200">
+                    <div class="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-3xl flex items-center justify-center mb-6">
+                        <i class="fas fa-user-graduate text-blue-600 dark:text-blue-400 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-1">Student</h3>
+                    <p class="text-sm opacity-60">Learning Portal</p>
+                </a>
+
+                <a href="#" class="portal-card glass-card p-8 rounded-[2.5rem]" data-aos="fade-up" data-aos-delay="300">
+                    <div class="w-20 h-20 bg-indigo-100 dark:bg-indigo-900/30 rounded-3xl flex items-center justify-center mb-6">
+                        <i class="fas fa-user-tie text-indigo-600 dark:text-indigo-400 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-1">Class Head</h3>
+                    <p class="text-sm opacity-60">Classroom Mgmt</p>
+                </a>
+
+                <a href="#" class="portal-card glass-card p-8 rounded-[2.5rem]" data-aos="fade-up" data-aos-delay="400">
+                    <div class="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-3xl flex items-center justify-center mb-6">
+                        <i class="fas fa-book-open text-emerald-600 dark:text-emerald-400 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-1">Subject Head</h3>
+                    <p class="text-sm opacity-60">Curriculum</p>
+                </a>
+
+                <a href="#" class="portal-card glass-card p-8 rounded-[2.5rem]" data-aos="fade-up" data-aos-delay="500">
+                    <div class="w-20 h-20 bg-orange-100 dark:bg-orange-900/30 rounded-3xl flex items-center justify-center mb-6">
+                        <i class="fas fa-heart text-orange-600 dark:text-orange-400 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-1">Parent</h3>
+                    <p class="text-sm opacity-60">Engagement</p>
+                </a>
+            </div>
+
+            <div class="text-center mt-16">
+                <p class="opacity-50 text-sm">
+                    Don't see your role? <a href="{% url 'index' %}#contacts" class="text-purple-600 font-bold hover:underline">Contact Support</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="py-8 border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950">
+        <div class="text-center">
+            <p class="text-[10px] font-bold uppercase tracking-widest opacity-40">&copy; 2025 Eduke Platform Intelligence.</p>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true, easing: 'ease-out-quad' });
+
+        // Theme Toggle Logic
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            themeIcon.className = isDark ? 'fas fa-sun text-yellow-400 text-xl' : 'fas fa-moon text-purple-600 text-xl';
+        });
+
+        // Custom Cursor Logic
+        const dot = document.getElementById('cursor-dot');
+        const outline = document.getElementById('cursor-outline');
+
+        window.addEventListener('mousemove', (e) => {
+            dot.style.left = e.clientX + 'px';
+            dot.style.top = e.clientY + 'px';
+            
+            outline.animate({
+                left: e.clientX + 'px',
+                top: e.clientY + 'px'
+            }, { duration: 400, fill: "forwards" });
+        });
+    </script>
+</body>
+</html>

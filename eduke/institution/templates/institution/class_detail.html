@@ -1,0 +1,838 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ class_obj.class_name }} - Class Detail | Eduke</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="icon" type="image/png" href="{% static 'images/logobase_white.png' %}">
+  <script>
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd', 400: '#a78bfa',
+              500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9', 800: '#5b21b6', 900: '#4c1d95',
+            },
+            accent: { fuchsia: '#d946ef', indigo: '#6366f1', rose: '#f43f5e', amber: '#f59e0b' }
+          },
+          borderRadius: { '4xl': '2rem', '5xl': '3rem', '6xl': '4rem' }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+    html,
+    body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      position: fixed;
+      /* Lock viewport on mobile */
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      letter-spacing: -0.01em;
+      background-color: #f8fafc;
+    }
+
+    .dark body {
+      background-color: #020617;
+    }
+
+    /* Cursor Spotlight Effect */
+    #spotlight {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: radial-gradient(circle at var(--x) var(--y), rgba(139, 92, 246, 0.12) 0%, transparent 40%);
+      z-index: 1;
+    }
+
+    /* Floating Orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: 0;
+      opacity: 0.4;
+      animation: float 20s infinite alternate;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translate(0, 0);
+      }
+
+      100% {
+        transform: translate(80px, 40px);
+      }
+    }
+
+    /* Ultra Glassmorphism */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .dark .glass-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Sidebar logic: Needs to stay dark even in light mode for "Premium" feel */
+    .glass-sidebar {
+      background: rgba(10, 10, 20, 0.95);
+      backdrop-filter: blur(30px);
+      border-right: 1px solid rgba(139, 92, 246, 0.1);
+    }
+
+    /* Active Nav Styling */
+    .nav-item {
+      position: relative;
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .nav-item.active {
+      color: #a78bfa !important;
+      background: linear-gradient(90deg, rgba(139, 92, 246, 0.15) 0%, transparent 100%);
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 25%;
+      height: 50%;
+      width: 4px;
+      background: #d946ef;
+      box-shadow: 0 0 15px #d946ef;
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* Card Tilt Effect */
+    .tilt-card {
+      transition: transform 0.1s ease-out;
+      transform-style: preserve-3d;
+    }
+
+    .tilt-card>* {
+      transform: translateZ(20px);
+    }
+
+    /* Custom Scroll */
+    .custom-scroll::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: linear-gradient(to bottom, #8b5cf6, #7c3aed);
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(to bottom, #7c3aed, #6d28d9);
+    }
+
+    /* Main Content Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(241, 245, 249, 0.2);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(to bottom, #cbd5e1, #94a3b8);
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .dark ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.2);
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+      background: linear-gradient(to bottom, #475569, #334155);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Mobile Responsive Table */
+    @media (max-width: 768px) {
+      .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      table {
+        min-width: 600px;
+      }
+      
+      th, td {
+        white-space: nowrap;
+      }
+      
+      .mobile-card-view {
+        display: none;
+      }
+      
+      /* Adjust main content padding for mobile */
+      .main-content-padding {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+      }
+          
+      /* Ensure sidebar is properly sized on mobile */
+      .sidebar-mobile {
+        width: 100%;
+        max-width: 288px; /* 72 * 4 rem equivalent */
+      }
+          
+      /* Additional mobile optimizations */
+      @media (max-width: 480px) {
+        .student-card {
+          padding: 0.75rem;
+        }
+            
+        .page-header {
+          flex-direction: column;
+          align-items: stretch;
+        }
+            
+        .page-actions {
+          justify-content: center;
+          margin-top: 0.5rem;
+        }
+            
+        /* Adjust font sizes for very small screens */
+        h1.text-4xl {
+          font-size: 1.5rem;
+          line-height: 1.3;
+        }
+            
+        h2.text-2xl {
+          font-size: 1.25rem;
+          line-height: 1.4;
+        }
+      }
+    }
+    
+    /* Alternative mobile view for small screens */
+    @media (max-width: 768px) {
+      .student-table-view {
+        display: none;
+      }
+      
+      .student-card-view {
+        display: block;
+      }
+      
+      .student-card {
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 1rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      
+      .dark .student-card {
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      
+      /* Adjust header elements for mobile */
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      
+      .page-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+      }
+      
+      /* Adjust class details for mobile */
+      .class-details-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      /* Improve text wrapping */
+      .truncate {
+        max-width: 100%;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        hyphens: auto;
+      }
+    }
+    
+    @media (min-width: 769px) {
+      .student-card-view {
+        display: none;
+      }
+    }
+
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #8b5cf633;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body class="antialiased">
+  <div id="spotlight"></div>
+  <div class="orb w-96 h-96 bg-brand-500 top-[-10%] left-[-10%]"></div>
+  <div class="orb w-80 h-80 bg-accent-indigo bottom-[10%] right-[5%]"></div>
+
+  <div class="relative z-10 flex h-[100dvh] w-full p-0 lg:p-6 gap-0 lg:gap-6 overflow-hidden">
+    <aside id="sidebar"
+      class="fixed inset-y-0 left-0 z-50 w-72 transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-500 ease-in-out h-[100dvh] lg:h-full">
+
+      <div
+        class="flex flex-col h-full glass-sidebar lg:rounded-[3rem] shadow-2xl overflow-hidden border-r border-white/5 bg-[#0a0a14]/80 backdrop-blur-xl">
+
+        <div class="p-8 pb-4 shrink-0 flex items-center justify-between">
+          <div class="flex items-center gap-3 group cursor-pointer">
+            <div
+              class="w-10 h-10 rounded-xl flex items-center justify-center border border-slate-200 dark:border-white/10 bg-white/10 dark:bg-white/5 group-hover:rotate-12 transition-transform animate-pulse bg-gradient-to-r from-brand-500 via-accent-fuchsia to-indigo-500 bg-[length:200%_200%]">
+              <img src="{% static 'images/logobase_white.png' %}" alt="Eduke Logo" class="w-6 h-6 object-contain animate-color-cycle">
+            </div>
+            <div>
+              <h2 class="text-xl font-black tracking-tighter text-white uppercase text-nowrap">
+                Eduke<span class="text-accent-fuchsia">.</span>
+              </h2>
+              <p class="text-[8px] font-black text-brand-400 uppercase tracking-[0.3em]">Portal</p>
+            </div>
+          </div>
+
+          <button id="close-sidebar"
+            class="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 text-slate-400 hover:text-white transition-all">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+
+        <nav class="flex-grow px-4 space-y-4 overflow-y-auto custom-scroll py-2">
+
+          <div>
+            <p class="px-6 text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">Command</p>
+            <div class="space-y-1">
+
+              <a href="{% url 'institution:dashboard' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'dashboard' %} 
+                            bg-brand-500/10 border border-brand-500/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                {% if request.resolver_match.url_name == 'dashboard' %}
+                <span class="absolute left-2 w-1 h-4 bg-brand-500 rounded-full shadow-[0_0_10px_#8b5cf6]"></span>
+                {% endif %}
+
+                <i
+                  class="fa-solid fa-layer-group text-base {% if request.resolver_match.url_name == 'dashboard' %} text-brand-400 {% else %} group-hover:text-brand-400 {% endif %}"></i>
+                <span class="font-bold text-sm">Dashboard</span>
+              </a>
+
+              <a href="{% url 'institution:manage_student' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'manage_student' %} 
+                            bg-accent-fuchsia/10 border border-accent-fuchsia/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                {% if request.resolver_match.url_name == 'manage_student' %}
+                <span class="absolute left-2 w-1 h-4 bg-accent-fuchsia rounded-full shadow-[0_0_10px_#d946ef]"></span>
+                {% endif %}
+
+                <i
+                  class="fa-solid fa-user-shield text-base {% if request.resolver_match.url_name == 'manage_student' %} text-accent-fuchsia {% else %} group-hover:text-accent-fuchsia {% endif %}"></i>
+                <span class="font-bold text-sm">Students</span>
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <p class="px-6 text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">Operations
+            </p>
+            <div class="space-y-1">
+
+              <a href="{% url 'institution:classes' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'classes' or 'class_detail' %} 
+                            bg-indigo-500/10 border border-indigo-500/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                {% if request.resolver_match.url_name == 'classes' or 'class_detail' %}
+                <span class="absolute left-2 w-1 h-4 bg-indigo-500 rounded-full shadow-[0_0_10px_#6366f1]"></span>
+                {% endif %}
+
+                <i
+                  class="fa-solid fa-chalkboard-user text-base {% if request.resolver_match.url_name == 'classes' or 'class_detail' %} text-indigo-400 {% else %} group-hover:text-indigo-400 {% endif %}"></i>
+                <span class="font-bold text-sm">Manage Classes</span>
+              </a>
+
+              <a href="{% url 'institution:subjects' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'subjects' %} 
+                            bg-emerald-500/10 border border-emerald-500/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                {% if request.resolver_match.url_name == 'subjects' %}
+                <span class="absolute left-2 w-1 h-4 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]"></span>
+                {% endif %}
+
+                <i
+                  class="fa-solid fa-book-open-reader text-base {% if request.resolver_match.url_name == 'subjects' %} text-emerald-400 {% else %} group-hover:text-emerald-400 {% endif %}"></i>
+                <span class="font-bold text-sm">Subject Head</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <p class="px-6 text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">User</p>
+            <div class="space-y-1">
+              <a href="{% url 'institution:profile' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'profile' %} 
+                            bg-brand-500/10 border border-brand-500/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                {% if request.resolver_match.url_name == 'profile' %}
+                <span class="absolute left-2 w-1 h-4 bg-brand-500 rounded-full shadow-[0_0_10px_#8b5cf6]"></span>
+                {% endif %}
+
+                <i
+                  class="fa-solid fa-circle-user text-base {% if request.resolver_match.url_name == 'profile' %} text-brand-400 {% else %} group-hover:text-brand-400 {% endif %}"></i>
+                <span class="font-bold text-sm">{{ institution.abbreviation|default:"User" }}
+                  Profile</span>
+              </a>
+            </div>
+          </div>
+        </nav>
+
+        <div class="p-4 shrink-0 mt-auto lg:mb-4">
+          <div
+            class="relative overflow-hidden group bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-4 flex flex-col gap-3 transition-all hover:border-white/20">
+            <div class="flex items-center gap-3">
+              <div class="relative flex-shrink-0">
+                <div
+                  class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center border border-white/20 shadow-lg">
+                  <span class="text-[11px] font-black text-white uppercase">
+                    {{ institution.abbreviation|default:"EDU" }}</span>
+                </div>
+                <div
+                  class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-[#0a0a14] rounded-full">
+                </div>
+              </div>
+              <div class="min-w-0 flex-1">
+                <h4 class="text-[11px] font-black text-white truncate tracking-tight mb-0.5">
+                  {{ institution.name|default:"Main Campus" }}
+                </h4>
+                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none">
+                  Admin</p>
+              </div>
+            </div>
+
+            <div class="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+            <a href="{% url 'logout' %}"
+              class="group/btn relative flex items-center justify-between px-4 py-2.5 rounded-xl bg-rose-500/5 hover:bg-rose-500 border border-rose-500/20 hover:border-rose-500 transition-all duration-300">
+              <span
+                class="text-[9px] font-black uppercase tracking-widest text-rose-400 group-hover/btn:text-white">Logout</span>
+              <i
+                class="fa-solid fa-power-off text-[10px] text-rose-500 group-hover/btn:text-white transition-colors"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+     <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+      <header class="h-20 lg:h-24 flex items-center justify-between px-6 lg:px-10 shrink-0">
+
+        <div class="flex items-center gap-4">
+
+          <button id="menu-btn" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl glass-card text-brand-600">
+
+            <i class="fa-solid fa-bars-staggered"></i>
+
+          </button>
+
+          <h1 class="text-xl lg:text-2xl font-black text-slate-800 dark:text-white tracking-tight">
+
+            CLASS<span class="text-brand-600"> DETAILS</span> 
+
+          </h1>
+
+        </div>
+
+        <button id="theme-switch" class="w-10 h-10 lg:w-12 lg:h-12 rounded-xl glass-card flex items-center justify-center text-brand-600">
+
+          <i id="theme-icon" class="fa-solid fa-moon"></i>
+
+        </button>
+
+      </header>
+
+
+
+      <div class="flex-1 overflow-y-auto px-6 lg:px-10 pb-10 custom-scroll">
+
+        <div class="relative p-8 lg:p-12 rounded-[2.5rem] bg-gradient-to-br from-brand-600 to-indigo-800 text-white mb-8 overflow-hidden shadow-2xl">
+
+          <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+
+            <div>
+
+              <span class="inline-block px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-[10px] font-bold uppercase tracking-[0.2em] mb-4">Class Overview</span>
+
+              <h1 class="text-4xl lg:text-6xl font-black tracking-tighter uppercase leading-none">{{ class_obj.class_name }}</h1>
+
+              <div class="mt-6 flex items-center gap-3">
+
+                <div class="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
+
+                  <i class="fa-solid fa-user-tie text-brand-200"></i>
+
+                </div>
+
+                <div>
+
+                  <p class="text-[10px] font-bold text-brand-200 uppercase tracking-widest">Class Head</p>
+
+                  <p class="text-lg font-bold">{{ class_obj.class_head }}</p>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="flex flex-col gap-3">
+
+              <a href="mailto:{{ class_obj.email }}" class="flex items-center justify-center gap-3 bg-white text-brand-700 px-8 py-4 rounded-2xl font-black text-sm uppercase transition-transform hover:scale-105 active:scale-95">
+
+                <i class="fa-solid fa-envelope"></i> Send Email
+
+              </a>
+
+            </div>
+
+          </div>
+
+          <div class="absolute -top-12 -right-12 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+
+          <div class="absolute -bottom-12 -left-12 w-48 h-48 bg-brand-400/20 rounded-full blur-2xl"></div>
+
+        </div>
+
+
+
+        <div class="space-y-6">
+
+          <div class="flex items-center justify-between">
+
+            <h2 class="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Student Roster</h2>
+
+            <div class="px-4 py-2 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold border border-brand-500/20">
+
+              {{ students|length }} Enrolled
+
+            </div>
+
+          </div>
+
+
+
+          {% if students %}
+
+          <div class="hidden lg:block overflow-hidden glass-card rounded-[2rem]">
+
+            <table class="w-full text-left border-collapse">
+
+              <thead>
+
+                <tr class="border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
+
+                  <th class="py-5 px-8 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Roll No</th>
+
+                  <th class="py-5 px-8 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Student Name</th>
+
+                  <th class="py-5 px-8 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Email Address</th>
+
+                </tr>
+
+              </thead>
+
+              <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+
+                {% for student in students %}
+
+                <tr class="group hover:bg-brand-500/5 transition-all duration-300">
+
+                  <td class="py-6 px-8">
+
+                    <span class="font-mono text-sm font-black text-brand-600 dark:text-brand-400">#{{ student.roll_no }}</span>
+
+                  </td>
+
+                  <td class="py-6 px-8">
+
+                    <div class="flex items-center gap-4">
+
+                      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+
+                        {{ student.first_name.0 }}{{ student.last_name.0 }}
+
+                      </div>
+
+                      <span class="font-bold text-slate-800 dark:text-slate-100">{{ student.first_name }} {{ student.last_name }}</span>
+
+                    </div>
+
+                  </td>
+
+                  <td class="py-6 px-8">
+
+                    <span class="text-sm text-slate-500 dark:text-slate-400">{{ student.email|default:"N/A" }}</span>
+
+                  </td>
+
+                </tr>
+
+                {% endfor %}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+
+
+          <div class="lg:hidden grid grid-cols-1 gap-4">
+
+            {% for student in students %}
+
+            <div class="animate-list-item glass-card p-5 rounded-3xl border border-slate-200 dark:border-white/10"
+
+              style="animation-delay: 100ms;">
+
+              <div class="flex items-center justify-between mb-4">
+
+                <span class="text-[10px] font-black text-brand-600 dark:text-brand-400 uppercase tracking-widest bg-brand-500/10 px-3 py-1 rounded-full">ID: #{{ student.roll_no }}</span>
+
+                <button class="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400">
+
+                  <i class="fa-solid fa-chevron-right text-[10px]"></i>
+
+                </button>
+
+              </div>
+
+              <div class="flex items-center gap-4">
+
+                <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-brand-600 dark:text-brand-400 font-black text-xl">
+
+                  {{ student.first_name.0 }}
+
+                </div>
+
+                <div class="min-w-0">
+
+                  <h4 class="font-black text-slate-900 dark:text-white truncate">{{ student.first_name }} {{ student.last_name }}</h4>
+
+                  <p class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ student.email|default:"No email linked" }}</p>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            {% endfor %}
+
+          </div>
+
+          {% else %}
+
+          <div class="flex flex-col items-center justify-center py-20 glass-card rounded-[3rem] text-center border-dashed border-2 border-slate-300 dark:border-white/10">
+
+            <div class="w-20 h-20 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-4">
+
+              <i class="fa-solid fa-users-slash text-2xl text-slate-300"></i>
+
+            </div>
+
+            <h3 class="text-xl font-bold text-slate-800 dark:text-white">No Students Found</h3>
+
+            <p class="text-slate-500 text-sm mt-2 mb-6">Start by adding students to this class.</p>
+
+            <a href="{% url 'institution:manage_student' %}" class="bg-brand-600 text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-widest">Add Student</a>
+
+          </div>
+
+          {% endif %}
+
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+
+
+  <script>
+
+    const spotlight = document.getElementById('spotlight');
+
+    const menuBtn = document.getElementById('menu-btn');
+
+    const closeSidebar = document.getElementById('close-sidebar');
+
+    const sidebar = document.getElementById('sidebar');
+
+    const overlay = document.getElementById('sidebar-overlay');
+
+    const themeSwitch = document.getElementById('theme-switch');
+
+    const themeIcon = document.getElementById('theme-icon');
+
+
+
+    // Mobile Sidebar
+
+    menuBtn.addEventListener('click', (e) => {
+
+      e.stopPropagation();
+
+      sidebar.classList.toggle('-translate-x-full');
+
+    });
+
+
+
+    const closeSidebarBtn = document.getElementById('close-sidebar');
+
+    if (closeSidebarBtn) {
+
+      closeSidebarBtn.addEventListener('click', () => {
+
+        sidebar.classList.add('-translate-x-full');
+
+      });
+
+    }
+
+
+
+    document.addEventListener('keydown', (e) => {
+
+      if (e.key === 'Escape' && window.innerWidth < 1024) {
+
+        sidebar.classList.add('-translate-x-full');
+
+      }
+
+    });
+
+
+
+    // Mouse Spotlight
+
+    window.onmousemove = e => {
+
+      spotlight.style.setProperty('--x', `${e.clientX}px`);
+
+      spotlight.style.setProperty('--y', `${e.clientY}px`);
+
+    };
+
+
+
+    // Theme Switcher with proper color handling
+
+    const updateThemeIcon = () => {
+
+      const isDark = document.documentElement.classList.contains('dark');
+
+      themeIcon.className = isDark ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-brand-600';
+
+      localStorage.theme = isDark ? 'dark' : 'light';
+
+    };
+
+
+
+    themeSwitch.onclick = () => {
+
+      document.documentElement.classList.toggle('dark');
+
+      updateThemeIcon();
+
+     
+
+      // Add visual feedback
+
+      themeSwitch.style.transform = 'scale(0.95)';
+
+      setTimeout(() => {
+
+        themeSwitch.style.transform = 'scale(1)';
+
+      }, 150);
+
+    };
+
+
+
+    // Initial State
+
+    updateThemeIcon();
+
+  </script>
+
+</body>
+
+</html>

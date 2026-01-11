@@ -1,0 +1,950 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth overflow-x-hidden">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Eduke | The Future of Academic Intelligence</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    <link rel="icon" type="image/png" href="{% static 'images/logobase_white.png' %}">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f0074',
+                        accent: '#7c00b5',
+                        surface: '#fdfaff',
+                    },
+                    borderRadius: {
+                        '4xl': '2rem',
+                        '5xl': '3rem',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'spin-slow': 'spin 12s linear infinite',
+                    }
+                }
+            }
+        }
+
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            width: 100%;
+            cursor: none;
+        }
+
+        /* Prevent AOS from creating horizontal scroll */
+        [data-aos] {
+            pointer-events: none;
+        }
+
+        .aos-animate {
+            pointer-events: auto;
+        }
+
+        .mesh-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(124, 0, 181, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(79, 0, 116, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.05) 0%, transparent 60%);
+            animation: meshMove 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes meshMove {
+            0% {
+                transform: scale(1) translate(0, 0);
+            }
+
+            100% {
+                transform: scale(1.1) translate(2%, 2%);
+            }
+        }
+
+        .dark .mesh-bg {
+            background:
+                radial-gradient(circle at 0% 0%, rgba(124, 0, 181, 0.2) 0, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(15, 23, 42, 1) 0, transparent 50%);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 20px 50px -12px rgba(79, 0, 116, 0.08);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.5);
+        }
+
+        .hover-glow:hover {
+            border-color: rgba(124, 0, 181, 0.4);
+            box-shadow: 0 0 30px rgba(124, 0, 181, 0.15);
+            transform: translateY(-8px) scale(1.01);
+        }
+
+        .float {
+            animation: floatAnim 6s ease-in-out infinite;
+        }
+
+        @keyframes floatAnim {
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-25px) rotate(2deg);
+            }
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #4f0074 0%, #a855f7 50%, #7c00b5 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 5s linear infinite;
+        }
+
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        /* Cursor - Hidden on mobile */
+        @media (max-width: 1024px) {
+
+            #cursor-dot,
+            #cursor-outline {
+                display: none;
+            }
+
+            body {
+                cursor: auto;
+            }
+        }
+
+        #cursor-dot {
+            width: 8px;
+            height: 8px;
+            background: #7c00b5;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            border-radius: 50%;
+            transition: transform 0.1s;
+        }
+
+        #cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 2px solid rgba(124, 0, 181, 0.3);
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            border-radius: 50%;
+            transition: all 0.2s ease-out;
+        }
+
+        .form-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .dark .form-input {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #7c00b5;
+            background: white;
+        }
+
+        .dark .form-input:focus {
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #4f0074, #7c00b5);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #7c00b5, #4f0074);
+        }
+
+        /* Features Section Enhancement */
+        .feature-card {
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(124, 0, 181, 0.05) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-card:hover {
+            box-shadow: 0 40px 80px -20px rgba(124, 0, 181, 0.15);
+        }
+        
+        .stats-card {
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1) !important;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-8px) scale(1.03) !important;
+            box-shadow: 0 25px 50px -12px rgba(124, 0, 181, 0.25) !important;
+        }
+
+        .feature-icon-container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-icon-container::after {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            background: inherit;
+            filter: blur(15px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: inherit;
+            z-index: -1;
+        }
+
+        .feature-card:hover .feature-icon-container::after {
+            opacity: 0.4;
+        }
+        
+        .feature-card {
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1) !important;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-12px) scale(1.03) !important;
+            box-shadow: 0 40px 80px -20px rgba(124, 0, 181, 0.25) !important;
+        }
+    </style>
+</head>
+
+<body class="antialiased bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 overflow-x-hidden">
+
+    <div id="cursor-dot"></div>
+    <div id="cursor-outline"></div>
+
+    <header class="fixed w-full z-[100] transition-all duration-500 px-4 md:px-6 py-4" id="navbar">
+        <div class="container mx-auto">
+            <div class="glass-card rounded-[2rem] px-4 md:px-10 py-3 flex justify-between items-center"
+                id="nav-container">
+                <a href="#" class="flex items-center space-x-2 group">
+                    <img src="{% static 'images/logo_text_long.png' %}" alt="Eduke"
+                        class="h-6 md:h-7 w-auto dark:invert group-hover:scale-105 transition-transform">
+                </a>
+
+                <nav class="hidden md:flex items-center space-x-8 text-[12px] font-black tracking-[0.15em] uppercase">
+                    <a href="#vision"
+                        class="opacity-50 hover:opacity-100 hover:text-purple-600 transition-all">Vision</a>
+                    <a href="#features"
+                        class="opacity-50 hover:opacity-100 hover:text-purple-600 transition-all">Features</a>
+                    <a href="#stats"
+                        class="opacity-50 hover:opacity-100 hover:text-purple-600 transition-all">Stats</a>
+                    <a href="#contacts"
+                        class="opacity-50 hover:opacity-100 hover:text-purple-600 transition-all">Contacts</a>
+                </nav>
+
+                <div class="flex items-center space-x-2 md:space-x-4">
+                    <button id="theme-toggle"
+                        class="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/50 dark:bg-slate-800 border border-white/20 transition-all">
+                        <i id="theme-icon" class="fas fa-moon text-slate-600 dark:text-yellow-400"></i>
+                    </button>
+
+                    <a href="{% url 'user_portal' %}"
+                        class="hidden sm:block bg-slate-900 dark:bg-white text-white dark:text-slate-950 px-4 md:px-6 py-2.5 rounded-2xl font-bold text-xs md:text-sm transition-all shadow-xl shadow-purple-500/10">
+                        Sign In
+                    </a>
+
+                    <button id="mobile-menu-btn"
+                        class="md:hidden w-10 h-10 flex items-center justify-center rounded-2xl bg-purple-600 text-white">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="mobile-menu"
+            class="fixed inset-0 bg-slate-50/98 dark:bg-slate-950/98 backdrop-blur-xl z-[105] flex flex-col items-center justify-center space-y-8 transition-all duration-500 translate-x-full opacity-0">
+            <button id="close-menu" class="absolute top-10 right-10 text-2xl text-purple-600">
+                <i class="fas fa-times"></i>
+            </button>
+            <a href="#vision" class="text-3xl font-black uppercase tracking-widest menu-link">Vision</a>
+            <a href="#features" class="text-3xl font-black uppercase tracking-widest menu-link">Features</a>
+            <a href="#stats" class="text-3xl font-black uppercase tracking-widest menu-link">Stats</a>
+            <a href="#contacts" class="text-3xl font-black uppercase tracking-widest menu-link">Contacts</a>
+            <a href="{% url 'user_portal' %}"
+                class="bg-purple-600 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-sm">Sign
+                In</a>
+        </div>
+    </header>
+
+    <section class="relative min-h-screen flex items-center pt-20 overflow-hidden">
+        <div class="mesh-bg"></div>
+        
+        <div class="absolute top-1/4 -left-20 w-64 md:w-96 h-64 md:h-96 bg-purple-500/10 blur-[120px] rounded-full animate-pulse-slow"></div>
+        <div class="absolute bottom-1/4 -right-20 w-64 md:w-96 h-64 md:h-96 bg-indigo-500/10 blur-[120px] rounded-full animate-pulse-slow"></div>
+        
+        <div class="absolute top-1/3 left-1/4 w-32 h-32 bg-violet-500/5 blur-[80px] rounded-full animate-bounce"></div>
+        <div class="absolute bottom-1/3 right-1/4 w-24 h-24 bg-fuchsia-500/5 blur-[80px] rounded-full animate-bounce" style="animation-delay: 1s;"></div>
+
+        <div
+            class="absolute top-1/4 -left-20 w-64 md:96 h-64 md:h-96 bg-purple-500/10 blur-[120px] rounded-full animate-pulse-slow">
+        </div>
+        <div
+            class="absolute bottom-1/4 -right-20 w-64 md:96 h-64 md:h-96 bg-indigo-500/10 blur-[120px] rounded-full animate-pulse-slow">
+        </div>
+
+        <div class="container mx-auto px-6 relative">
+            <div class="max-w-5xl mx-auto text-center">
+                <div class="inline-flex items-center space-x-3 px-5 py-2.5 rounded-full bg-white/40 dark:bg-white/5 border border-white/30 mb-10 backdrop-blur-md"
+                    data-aos="fade-down">
+                    <span class="flex h-2 w-2 relative">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-purple-600"></span>
+                    </span>
+                    <span
+                        class="text-[10px] font-black uppercase tracking-[0.3em] text-purple-700 dark:text-purple-400">Intelligence
+                        Layer v2.0</span>
+                </div>
+
+                <h1 class="text-4xl md:text-6xl lg:text-[100px] font-black tracking-tighter mb-8 leading-[1] md:leading-[0.9]"
+                    data-aos="zoom-out-up" data-aos-duration="1500">
+                    Beyond Software. <br>
+                    <span class="text-gradient">Pure Intelligence.</span>
+                </h1>
+
+                <p class="text-lg md:text-2xl opacity-60 mb-12 leading-relaxed max-w-3xl mx-auto font-medium"
+                    data-aos="fade-up" data-aos-delay="300">
+                    Redefining academic ecosystems with behavioral AI, creating a seamless bridge between administrative
+                    data and student potential.
+                </p>
+
+                <div class="flex flex-col sm:flex-row justify-center gap-6" data-aos="fade-up" data-aos-delay="500">
+                    <a href="{% url 'user_portal' %}"
+                        class="group relative bg-purple-600 text-white px-12 py-5 rounded-[2rem] font-black text-lg transition-all hover:shadow-[0_0_40px_rgba(124,0,181,0.4)] overflow-hidden hover:scale-105">
+                        <span class="relative z-10">Enter Ecosystem</span>
+                        <div
+                            class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000">
+                        </div>
+                    </a>
+                    <a href="#features"
+                        class="group relative bg-white dark:bg-slate-800 text-purple-600 dark:text-white px-12 py-5 rounded-[2rem] font-black text-lg transition-all hover:shadow-[0_0_40px_rgba(124,0,181,0.2)] overflow-hidden hover:scale-105 border border-purple-600/30">
+                        <span class="relative z-10">Explore Features</span>
+                        <div
+                            class="absolute inset-0 bg-gradient-to-r from-transparent via-purple-600/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000">
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="vision" class="py-20 md:py-40 relative">
+        <div class="container mx-auto px-6">
+            <div class="grid lg:grid-cols-12 gap-12 lg:gap-20 items-center">
+                <div class="lg:col-span-7" data-aos="fade-right">
+                    <h3 class="text-purple-600 font-black tracking-[0.4em] uppercase text-xs mb-6">Our Manifesto</h3>
+                    <h2 class="text-4xl md:text-7xl font-black tracking-tighter mb-10 leading-none">
+                        Evolving the <br> <span class="opacity-30">Cognitive Campus</span>
+                    </h2>
+
+                    <p class="text-xl md:text-2xl opacity-70 leading-relaxed font-medium mb-12">
+                        We believe technology should feel like an <span
+                            class="text-purple-600 font-extrabold italic">intuition</span>. A system that doesn't just
+                        store grades, but understands the journey.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="flex items-start space-x-5 group">
+                            <div
+                                class="shrink-0 w-14 h-14 rounded-2xl bg-white dark:bg-slate-900 shadow-xl flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all duration-500">
+                                <i class="fas fa-brain text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg mb-2">Human-Centric</h4>
+                                <p class="text-sm opacity-50">Designed to mirror the natural workflows of educators.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-5 group">
+                            <div
+                                class="shrink-0 w-14 h-14 rounded-2xl bg-white dark:bg-slate-900 shadow-xl flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all duration-500">
+                                <i class="fas fa-fingerprint text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg mb-2">Deep Privacy</h4>
+                                <p class="text-sm opacity-50">Military-grade security as a baseline, not an extra.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5" data-aos="zoom-in-left">
+                    <div class="relative">
+                        <div class="absolute inset-0 bg-purple-600/20 blur-[100px] rounded-full animate-pulse"></div>
+                        <div class="glass-card p-1 rounded-[2.5rem] md:rounded-[3.5rem] float">
+                            <div
+                                class="bg-white dark:bg-slate-900 rounded-[2.4rem] md:rounded-[3.4rem] p-8 md:p-12 relative overflow-hidden">
+                                <div class="absolute -right-5 -bottom-5 opacity-5 text-7xl md:text-9xl"><i
+                                        class="fas fa-quote-right"></i></div>
+                                <div
+                                    class="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl mb-10">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <blockquote
+                                    class="text-xl md:text-2xl font-semibold leading-relaxed italic text-slate-800 dark:text-slate-200">
+                                    "We are building the brain behind the classroom, turning static data into living
+                                    mentorship."
+                                </blockquote>
+                                <div class="mt-10 flex items-center space-x-4">
+                                    <div class="h-px w-8 bg-purple-600"></div>
+                                    <span class="text-[10px] font-black uppercase tracking-widest opacity-40">The
+                                        Engineering Core</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="py-24 md:py-48 relative overflow-hidden">
+        <div
+            class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(124,0,181,0.03),transparent_70%)]">
+        </div>
+        
+        <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/10 blur-[100px] rounded-full animate-pulse-slow"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full animate-pulse-slow"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="text-center max-w-3xl mx-auto mb-20 md:mb-32">
+                <h3 class="text-purple-600 font-black tracking-[0.4em] uppercase text-xs mb-6" data-aos="fade-up">Core
+                    Capabilities</h3>
+                <h2 class="text-4xl md:text-7xl font-black tracking-tighter mb-8 leading-none" data-aos="fade-up"
+                    data-aos-delay="100">
+                    Engineered for <br> <span class="text-gradient">Performance.</span>
+                </h2>
+                <p class="text-xl opacity-60 font-medium" data-aos="fade-up" data-aos-delay="200">
+                    Our intelligence layer integrates seamlessly with your existing infrastructure, providing real-time
+                    insights and automated workflows.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 md:gap-12 items-stretch">
+                <!-- Card 1 -->
+                <div class="glass-card feature-card p-10 md:p-14 rounded-[3rem] group relative overflow-hidden hover:scale-[1.03] transition-all duration-500" data-aos="fade-up">
+                    <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div
+                        class="feature-icon-container w-20 h-20 rounded-3xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 mb-10 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110 relative z-10">
+                        <i class="fas fa-infinity text-3xl"></i>
+                    </div>
+                    <h3 class="text-3xl font-black mb-6 relative z-10">Auto-Sync Hub</h3>
+                    <p class="text-lg opacity-60 leading-relaxed mb-8 relative z-10">Direct neural pipelines to Canvas, Blackboard,
+                        and Moodle. Data flows, it doesn't just transfer.</p>
+                    <div class="relative z-10">
+                        <div class="w-12 h-1 bg-purple-600/20 rounded-full mb-2"></div>
+                        <div class="w-full h-1 bg-gradient-to-r from-purple-500 to-transparent rounded-full scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-700"></div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="glass-card feature-card p-10 md:p-14 rounded-[3rem] group relative overflow-hidden hover:scale-[1.03] transition-all duration-500 md:mt-12" data-aos="fade-up"
+                    data-aos-delay="150">
+                    <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div
+                        class="feature-icon-container w-20 h-20 rounded-3xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 mb-10 transition-transform duration-500 group-hover:scale-110 relative z-10">
+                        <i class="fas fa-chart-line text-3xl"></i>
+                    </div>
+                    <h3 class="text-3xl font-black mb-6 relative z-10">Predictive AI</h3>
+                    <p class="text-lg opacity-60 leading-relaxed mb-8 relative z-10">Early warning systems that analyze engagement
+                        patterns to prevent academic decline before it happens.</p>
+                    <div class="relative z-10">
+                        <div class="w-12 h-1 bg-indigo-600/20 rounded-full mb-2"></div>
+                        <div class="w-full h-1 bg-gradient-to-r from-indigo-500 to-transparent rounded-full scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-700"></div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="glass-card feature-card p-10 md:p-14 rounded-[3rem] group relative overflow-hidden hover:scale-[1.03] transition-all duration-500" data-aos="fade-up"
+                    data-aos-delay="300">
+                    <div class="absolute inset-0 bg-gradient-to-br from-slate-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div
+                        class="feature-icon-container w-20 h-20 rounded-3xl bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-white mb-10 transition-transform duration-500 group-hover:-rotate-12 relative z-10">
+                        <i class="fas fa-shield-alt text-3xl"></i>
+                    </div>
+                    <h3 class="text-3xl font-black mb-6 relative z-10">Encrypted Core</h3>
+                    <p class="text-lg opacity-60 leading-relaxed mb-8 relative z-10">State-of-the-art zero-knowledge proofs ensuring
+                        student records are accessible only to authorized eyes.</p>
+                    <div class="relative z-10">
+                        <div class="w-12 h-1 bg-slate-600/20 rounded-full mb-2"></div>
+                        <div class="w-full h-1 bg-gradient-to-r from-slate-500 to-transparent rounded-full scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-700"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="stats" class="py-20 md:py-40 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(124,0,181,0.03),transparent_70%)]"></div>
+        <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/5 blur-[100px] rounded-full animate-pulse-slow"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-64 h-64 bg-indigo-500/5 blur-[100px] rounded-full animate-pulse-slow"></div>
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="text-center max-w-4xl mx-auto mb-16 md:mb-24" data-aos="fade-up">
+                <h2 class="text-4xl md:text-7xl font-black tracking-tighter mb-8 leading-none">By The Numbers</h2>
+                <p class="text-xl opacity-60 font-medium">Our impact across academic institutions worldwide.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-4 gap-8 text-center">
+                <div class="glass-card p-8 rounded-[2.5rem] relative overflow-hidden stats-card hover:scale-105 transition-all duration-500" data-aos="zoom-in" data-aos-delay="100">
+                    <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
+                    <div class="text-4xl md:text-5xl font-black text-purple-600 dark:text-purple-400 mb-2 relative z-10" data-count="250">0</div>
+                    <p class="text-sm opacity-60 uppercase tracking-wider relative z-10">Institutions</p>
+                    <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-transparent scale-x-0 hover:scale-x-100 transition-transform origin-left duration-700"></div>
+                </div>
+                <div class="glass-card p-8 rounded-[2.5rem] relative overflow-hidden stats-card hover:scale-105 transition-all duration-500" data-aos="zoom-in" data-aos-delay="200">
+                    <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
+                    <div class="text-4xl md:text-5xl font-black text-indigo-600 dark:text-indigo-400 mb-2 relative z-10" data-count="50000">0</div>
+                    <p class="text-sm opacity-60 uppercase tracking-wider relative z-10">Students</p>
+                    <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-transparent scale-x-0 hover:scale-x-100 transition-transform origin-left duration-700"></div>
+                </div>
+                <div class="glass-card p-8 rounded-[2.5rem] relative overflow-hidden stats-card hover:scale-105 transition-all duration-500" data-aos="zoom-in" data-aos-delay="300">
+                    <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
+                    <div class="text-4xl md:text-5xl font-black text-emerald-600 dark:text-emerald-400 mb-2 relative z-10" data-count="98">0</div>
+                    <p class="text-sm opacity-60 uppercase tracking-wider relative z-10">Satisfaction %</p>
+                    <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-transparent scale-x-0 hover:scale-x-100 transition-transform origin-left duration-700"></div>
+                </div>
+                <div class="glass-card p-8 rounded-[2.5rem] relative overflow-hidden stats-card hover:scale-105 transition-all duration-500" data-aos="zoom-in" data-aos-delay="400">
+                    <div class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
+                    <div class="text-4xl md:text-5xl font-black text-orange-600 dark:text-orange-400 mb-2 relative z-10" data-count="24">0</div>
+                    <p class="text-sm opacity-60 uppercase tracking-wider relative z-10">Hour Support</p>
+                    <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-transparent scale-x-0 hover:scale-x-100 transition-transform origin-left duration-700"></div>
+                </div>
+            </div>
+            
+            <div class="mt-20 grid md:grid-cols-2 gap-8">
+                <div class="glass-card p-8 rounded-[2.5rem] relative overflow-hidden stats-card hover:scale-105 transition-all duration-500" data-aos="fade-right" data-aos-delay="200">
+                    <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 mx-auto mb-6 relative z-10">
+                        <i class="fas fa-chart-line text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-black mb-4 text-center relative z-10">Performance Boost</h3>
+                    <p class="text-center opacity-80 relative z-10">Institutions report an average 35% improvement in administrative efficiency after implementing our platform.</p>
+                    <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-transparent scale-x-0 hover:scale-x-100 transition-transform origin-left duration-700"></div>
+                </div>
+                
+                <div class="glass-card p-8 rounded-[2.5rem] relative overflow-hidden stats-card hover:scale-105 transition-all duration-500" data-aos="fade-left" data-aos-delay="200">
+                    <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 mx-auto mb-6 relative z-10">
+                        <i class="fas fa-graduation-cap text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-black mb-4 text-center relative z-10">Student Success</h3>
+                    <p class="text-center opacity-80 relative z-10">Early intervention features have helped improve student retention rates by an average of 23%.</p>
+                    <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-transparent scale-x-0 hover:scale-x-100 transition-transform origin-left duration-700"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="contacts" class="py-24 md:py-44 relative bg-slate-100/30 dark:bg-slate-900/20">
+        <div class="container mx-auto px-6">
+            <div class="max-w-7xl mx-auto">
+                <div class="grid lg:grid-cols-2 gap-12 items-stretch">
+
+                    <div class="flex flex-col justify-center p-4" data-aos="fade-right">
+                        <div class="mb-12">
+                            <h3 class="text-purple-600 font-black tracking-[0.4em] uppercase text-xs mb-4">Command
+                                Center</h3>
+                            <h2 class="text-5xl md:text-7xl font-black tracking-tighter leading-none mb-8">
+                                Let's Build the <br> <span class="opacity-20">Future Together</span>
+                            </h2>
+                            <p class="text-xl opacity-60 leading-relaxed max-w-md">
+                                Reach out to our core engineering team for a technical architecture walkthrough and
+                                pilot integration.
+                            </p>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div class="glass-card p-6 rounded-3xl flex items-center space-x-6 hover-glow">
+                                <div
+                                    class="w-14 h-14 rounded-2xl bg-purple-600 text-white flex items-center justify-center text-xl shadow-lg">
+                                    <i class="fas fa-paper-plane"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-black uppercase tracking-widest opacity-40">Direct Link
+                                    </p>
+                                    <p class="text-xl font-bold">intelligence@eduke.ai</p>
+                                </div>
+                            </div>
+
+                            <div class="glass-card p-6 rounded-3xl flex items-center space-x-6 hover-glow">
+                                <div
+                                    class="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl shadow-lg">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-black uppercase tracking-widest opacity-40">Innovation
+                                        Hub</p>
+                                    <p class="text-xl font-bold">Global Sector 4, Tech City</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative" data-aos="fade-left">
+                        <div class="absolute inset-0 bg-purple-600/20 blur-[120px] rounded-full -z-10"></div>
+                        <div class="glass-card p-1 rounded-[3.5rem] h-full">
+                            <div class="bg-white dark:bg-slate-900 rounded-[3.4rem] p-8 md:p-14 h-full">
+                                <form id="contact-form" class="space-y-8">
+                                    <div class="grid md:grid-cols-2 gap-8">
+                                        <div class="space-y-2">
+                                            <label
+                                                class="text-[10px] font-black uppercase tracking-widest opacity-50 ml-2">Your
+                                                Name</label>
+                                            <input type="text" id="contact-name" name="name" placeholder="Alex Rivera"
+                                                class="form-input w-full px-7 py-5 rounded-3xl font-bold">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label
+                                                class="text-[10px] font-black uppercase tracking-widest opacity-50 ml-2">Institution</label>
+                                            <input type="text" id="contact-institution" name="institution" placeholder="Stanford University"
+                                                class="form-input w-full px-7 py-5 rounded-3xl font-bold">
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label
+                                            class="text-[10px] font-black uppercase tracking-widest opacity-50 ml-2">Professional
+                                            Email</label>
+                                        <input type="email" id="contact-email" name="email" placeholder="alex@institution.edu"
+                                            class="form-input w-full px-7 py-5 rounded-3xl font-bold">
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label
+                                            class="text-[10px] font-black uppercase tracking-widest opacity-50 ml-2">Project
+                                            Brief</label>
+                                        <textarea id="contact-message" name="message" rows="4" placeholder="How can our AI layer assist your faculty?"
+                                            class="form-input w-full px-7 py-5 rounded-3xl font-bold resize-none"></textarea>
+                                    </div>
+                                    <button type="submit"
+                                        class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-950 py-6 rounded-3xl font-black uppercase tracking-[0.2em] text-xs hover:bg-purple-600 dark:hover:bg-purple-600 dark:hover:text-white transition-all shadow-2xl group">
+                                        Initiate Protocol <i
+                                            class="fas fa-arrow-right ml-3 group-hover:translate-x-2 transition-transform"></i>
+                                    </button>
+                                </form>
+                                <div id="contact-result" class="mt-4 text-center hidden">
+                                    <p class="py-3 px-4 rounded-lg font-bold"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+    <footer class="py-16 md:py-24 border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
+                <div>
+                    <img src="{% static 'images/logo_text_long.png' %}" alt="Eduke" class="h-10 mb-6 dark:invert">
+                    <p class="text-[10px] font-black uppercase tracking-[0.5em] opacity-40">Engineering the Future of
+                        Learning</p>
+                </div>
+
+                <div class="flex flex-wrap gap-8 md:gap-12">
+                    <div class="flex flex-col space-y-4">
+                        <span class="text-[10px] font-black uppercase tracking-widest opacity-30">Legal</span>
+                        <a href="#" class="text-xs font-bold hover:text-purple-600 transition-colors">Privacy Policy</a>
+                        <a href="#" class="text-xs font-bold hover:text-purple-600 transition-colors">Terms of
+                            Intelligence</a>
+                    </div>
+                    <div class="flex flex-col space-y-4">
+                        <span class="text-[10px] font-black uppercase tracking-widest opacity-30">Connect</span>
+                        <div class="flex space-x-6 text-lg">
+                            <a href="#"><i class="fab fa-twitter"></i></a>
+                            <a href="#"><i class="fab fa-linkedin"></i></a>
+                            <a href="#"><i class="fab fa-github"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-20 text-center">
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] opacity-20">&copy; 2025 Eduke Platform
+                    Intelligence. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+        // Initialize Animations with overflow handling
+        AOS.init({
+            duration: 1000,
+            once: true,
+            offset: 50,
+            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            disable: 'mobile' // Optional: Disable on mobile if still causing issues
+        });
+
+
+
+        // Theme Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const themeIcon = document.getElementById('theme-icon');
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            themeIcon.classList.replace(isDark ? 'fa-moon' : 'fa-sun', isDark ? 'fa-sun' : 'fa-moon');
+            localStorage.theme = isDark ? 'dark' : 'light';
+        });
+
+
+
+        // Custom Cursor Logic
+        const dot = document.getElementById('cursor-dot');
+        const outline = document.getElementById('cursor-outline');
+
+        window.addEventListener('mousemove', (e) => {
+            dot.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+            outline.animate({
+                left: `${e.clientX}px`,
+                top: `${e.clientY}px`
+            }, { duration: 500, fill: "forwards" });
+        });
+
+        // Interactables
+        const interactables = document.querySelectorAll('a, button, .glass-card');
+        interactables.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                outline.style.transform = 'scale(1.5)';
+                outline.style.background = 'rgba(124, 0, 181, 0.05)';
+            });
+            el.addEventListener('mouseleave', () => {
+                outline.style.transform = 'scale(1)';
+                outline.style.background = 'transparent';
+            });
+        });
+
+        // Navbar scroll
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('nav-container');
+            if (window.scrollY > 50) {
+                nav.classList.add('shadow-2xl', 'bg-white/95', 'dark:bg-slate-900/95');
+            } else {
+                nav.classList.remove('shadow-2xl', 'bg-white/95', 'dark:bg-slate-900/95');
+            }
+        });
+
+        // Mobile Menu Toggle Logic
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const closeMenuBtn = document.getElementById('close-menu');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuLinks = document.querySelectorAll('.menu-link');
+
+        const toggleMenu = (isOpen) => {
+            if (isOpen) {
+                mobileMenu.classList.remove('translate-x-full', 'opacity-0');
+                document.body.style.overflow = 'hidden'; // Prevent scroll when menu is open
+            } else {
+                mobileMenu.classList.add('translate-x-full', 'opacity-0');
+                document.body.style.overflow = 'auto';
+            }
+        };
+
+        mobileMenuBtn.addEventListener('click', () => toggleMenu(true));
+        closeMenuBtn.addEventListener('click', () => toggleMenu(false));
+
+        // Close menu when a link is clicked
+        menuLinks.forEach(link => {
+            link.addEventListener('click', () => toggleMenu(false));
+        });
+        
+        // Handle contact form submission
+        const contactForm = document.getElementById('contact-form');
+        const contactResult = document.getElementById('contact-result');
+        
+        if(contactForm) {
+            contactForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Get form data
+                const formData = {
+                    name: document.getElementById('contact-name').value,
+                    institution: document.getElementById('contact-institution').value,
+                    email: document.getElementById('contact-email').value,
+                    message: document.getElementById('contact-message').value
+                };
+                
+                // Show loading state
+                const submitButton = contactForm.querySelector('button[type="submit"]');
+                const originalText = submitButton.innerHTML;
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Sending...';
+                
+                try {
+                    const response = await fetch('/contact-email/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    // Show result message
+                    contactResult.classList.remove('hidden');
+                    if(result.status === 'success') {
+                        contactResult.innerHTML = `<p class="py-3 px-4 rounded-lg font-bold text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-300">${result.message}</p>`;
+                        contactForm.reset(); // Clear the form
+                    } else {
+                        contactResult.innerHTML = `<p class="py-3 px-4 rounded-lg font-bold text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-300">${result.message}</p>`;
+                    }
+                    
+                    // Reset button
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalText;
+                    
+                    // Hide result after 5 seconds
+                    setTimeout(() => {
+                        contactResult.classList.add('hidden');
+                    }, 5000);
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    contactResult.classList.remove('hidden');
+                    contactResult.innerHTML = '<p class="py-3 px-4 rounded-lg font-bold text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-300">An error occurred while sending your message. Please try again.</p>';
+                    
+                    // Reset button
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalText;
+                }
+            });
+        }
+        
+        // Animate statistics counters when they come into view
+        function animateCounter(element) {
+            const target = parseInt(element.getAttribute('data-count'));
+            const duration = 2000; // Animation duration in ms
+            const increment = target / (duration / 16); // 16ms per frame at ~60fps
+            let current = 0;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                element.textContent = Math.floor(current).toLocaleString();
+            }, 16);
+        }
+        
+        // Check if statistics section is in view
+        function checkStatsVisibility() {
+            const statsSection = document.getElementById('stats');
+            if (statsSection) {
+                const rect = statsSection.getBoundingClientRect();
+                const isVisible = (rect.top <= window.innerHeight && rect.bottom >= 0);
+                
+                if (isVisible) {
+                    const counters = document.querySelectorAll('[data-count]');
+                    counters.forEach(counter => {
+                        if (!counter.classList.contains('animated')) {
+                            animateCounter(counter);
+                            counter.classList.add('animated');
+                        }
+                    });
+                }
+            }
+        }
+        
+        // Initialize counter visibility check
+        window.addEventListener('scroll', checkStatsVisibility);
+        // Run once on load in case stats are already visible
+        setTimeout(checkStatsVisibility, 500);
+        
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+
+</html>

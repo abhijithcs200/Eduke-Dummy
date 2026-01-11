@@ -1,0 +1,402 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Checkup | Eduke</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    animation: {
+                        'pan': 'pan 20s linear infinite',
+                        'radar-spin': 'radar-spin 2s linear infinite',
+                        'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'spin-slow': 'spin 10s linear infinite',
+                        'loading': 'loading 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        pan: {
+                            '0%': { backgroundPosition: '0 0' },
+                            '100%': { backgroundPosition: '50px 50px' },
+                        },
+                        'radar-spin': {
+                            'from': { transform: 'translate(-50%, -50%) rotate(0deg)' },
+                            'to': { transform: 'translate(-50%, -50%) rotate(360deg)' },
+                        },
+                        fadeInUp: {
+                            'to': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        loading: {
+                            '0%, 100%': { opacity: '1' },
+                            '50%': { opacity: '0.5' },
+                        }
+                    }
+                }
+            }
+        }
+
+        // Theme Initialization
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Minimal custom styles for scrollbar where Tailwind arbitrary values get too messy */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 999px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-50 dark:bg-[#020617] h-[100dvh] w-full overflow-hidden transition-colors duration-500 flex flex-col font-sans selection:bg-emerald-500/30">
+
+    <!-- Animated Grid Background -->
+    <div class="absolute inset-0 pointer-events-none opacity-[0.4] dark:opacity-[0.2] bg-[length:50px_50px] animate-pan"
+        style="background-image: linear-gradient(to right, #6366f1 1px, transparent 1px), linear-gradient(to bottom, #6366f1 1px, transparent 1px);">
+    </div>
+
+    <!-- Header / Nav -->
+    <nav class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-50">
+        <div class="flex items-center gap-3">
+            <div
+                class="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                <i class="fa-solid fa-shield-virus"></i>
+            </div>
+            <span class="font-bold text-slate-700 dark:text-white tracking-tight hidden sm:block">Security<span
+                    class="text-emerald-500">Hub</span></span>
+        </div>
+
+        <button id="theme-switch"
+            class="group relative w-10 h-10 rounded-xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-white/50 dark:border-white/5 flex items-center justify-center hover:scale-105 transition-all text-slate-500 dark:text-slate-400 hover:text-emerald-500 shadow-sm">
+            <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
+            <span
+                class="absolute top-0 right-0 w-2 h-2 bg-emerald-500 rounded-full scale-0 group-hover:scale-100 transition-transform"></span>
+        </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex items-center justify-center p-4 relative w-full max-w-7xl mx-auto z-10">
+
+        <!-- Decoration Orbs -->
+        <div
+            class="absolute top-20 left-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none animate-pulse">
+        </div>
+        <div
+            class="absolute bottom-20 right-10 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none">
+        </div>
+
+        <!-- PHASE 1: SCANNER -->
+        <div id="scanner-view"
+            class="w-full max-w-lg flex flex-col items-center transition-all duration-500 ease-in-out">
+
+            <div class="relative w-72 h-72 sm:w-80 sm:h-80 mb-10 flex items-center justify-center">
+                <!-- Rings -->
+                <div class="absolute inset-0 border border-slate-200 dark:border-white/5 rounded-full"></div>
+                <div
+                    class="absolute inset-4 border border-dashed border-slate-300 dark:border-white/10 rounded-full animate-spin-slow">
+                </div>
+                <div class="absolute inset-12 border border-slate-200 dark:border-white/5 rounded-full"></div>
+
+                <!-- Radar Beam using Tailwind Arbitrary Value for Conic Gradient -->
+                <div class="absolute top-1/2 left-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2 rounded-full animate-radar-spin opacity-50 dark:opacity-30"
+                    style="background: conic-gradient(from 0deg, transparent 0%, rgba(16, 185, 129, 0.3) 100%);">
+                </div>
+
+                <!-- Center Icon -->
+                <div
+                    class="relative z-10 w-32 h-32 rounded-full bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-emerald-500/20 flex items-center justify-center shadow-[0_0_60px_rgba(16,185,129,0.2)]">
+                    <i
+                        class="fa-solid fa-fingerprint text-6xl text-emerald-500 animate-[pulse_2s_ease-in-out_infinite]"></i>
+
+                    <!-- Scanning Line on Icon -->
+                    <div class="absolute inset-0 overflow-hidden rounded-full">
+                        <div
+                            class="w-full h-1 bg-emerald-400/50 absolute top-0 animate-[scan_1.5s_ease-in-out_infinite]">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orbiting Details -->
+                <div
+                    class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-3 bg-white dark:bg-slate-800 px-3 py-1 rounded-full text-[10px] font-mono font-bold text-slate-400 shadow-sm border border-slate-100 dark:border-white/10">
+                    Scanning...
+                </div>
+            </div>
+
+            <!-- Terminal -->
+            <div
+                class="w-full bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-white/50 dark:border-white/5 rounded-2xl p-1 shadow-2xl">
+                <div class="bg-slate-50 dark:bg-[#0f172a] rounded-xl p-5 h-56 overflow-hidden relative flex flex-col">
+                    <div
+                        class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-white/5 pb-2 shrink-0">
+                        <div class="flex gap-1.5">
+                            <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+                        </div>
+                        <div class="text-[10px] font-mono text-emerald-500 animate-pulse">LIVE_AUDIT_PROTOCOL</div>
+                    </div>
+
+                    <div id="logs" class="space-y-1.5 font-mono text-xs overflow-y-auto custom-scroll pb-4 flex-1">
+                        <!-- Logs injected by JS -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- PHASE 2: REPORT (Success) -->
+        <div id="report-view" class="hidden w-full max-w-sm transform transition-all duration-500 scale-95 opacity-0">
+
+            <div
+                class="relative bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-xl border border-white/20 dark:border-white/5 rounded-3xl p-8 text-center shadow-2xl shadow-emerald-500/10 overflow-hidden">
+
+                <!-- Background Glow -->
+                <div
+                    class="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-emerald-500/20 rounded-full blur-[60px] pointer-events-none">
+                </div>
+
+                <!-- Success Icon -->
+                <div class="relative mx-auto w-24 h-24 mb-6">
+                    <div class="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping opacity-20"></div>
+                    <div
+                        class="relative w-full h-full bg-gradient-to-tr from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white text-4xl shadow-lg shadow-emerald-500/30">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <!-- Badge -->
+                    <div
+                        class="absolute -bottom-2 -right-2 bg-slate-900 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded-full border border-slate-700 shadow-sm">
+                        SECURE
+                    </div>
+                </div>
+
+                <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2 tracking-tight">System Optimized</h2>
+                <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8">
+                    All security protocols are active. No threats detected in your institution's network.
+                </p>
+
+                <!-- Data Stats - Mini Grid -->
+                <div class="grid grid-cols-2 gap-3 mb-8">
+                    <div class="bg-slate-50 dark:bg-white/5 rounded-xl p-3 border border-slate-100 dark:border-white/5">
+                        <div class="text-[10px] uppercase text-slate-400 font-bold mb-1">Health</div>
+                        <div class="text-lg font-bold text-emerald-500">100%</div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-white/5 rounded-xl p-3 border border-slate-100 dark:border-white/5">
+                        <div class="text-[10px] uppercase text-slate-400 font-bold mb-1">Risk</div>
+                        <div class="text-lg font-bold text-slate-700 dark:text-slate-300">0%</div>
+                    </div>
+                </div>
+
+                <!-- Redirect Action -->
+                <div class="space-y-3">
+                    <button disabled
+                        class="w-full py-3.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-sm shadow-xl flex items-center justify-center gap-2 transition-all">
+                        <i class="fa-solid fa-circle-notch animate-spin text-xs"></i>
+                        <span>Redirecting in <span id="countdown">3</span>s</span>
+                    </button>
+
+                    <a href="{% url 'institution:dashboard' %}"
+                        class="block text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                        Click here if not redirected automatically
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- PHASE 3: ERROR (Simulated) -->
+        <div id="error-view" class="hidden w-full max-w-lg transform transition-all duration-500">
+            <div
+                class="bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-red-500/30 rounded-[2.5rem] p-8 text-center relative overflow-hidden animate-fade-in-up">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-500 to-rose-600"></div>
+
+                <div
+                    class="w-20 h-20 mx-auto bg-rose-100 dark:bg-rose-900/30 rounded-full flex items-center justify-center text-rose-500 mb-6">
+                    <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
+                </div>
+
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Threat Detected</h1>
+                <p class="text-slate-500 dark:text-slate-400 text-sm mb-6">
+                    Critical vulnerability found in firewall configuration. Automatic fix failed.
+                </p>
+
+                <div class="flex gap-3 justify-center">
+                    <a href="{% url 'institution:dashboard' %}"
+                        class="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 font-medium text-sm hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
+                        Ignore & Exit
+                    </a>
+                    <button onclick="location.reload()"
+                        class="px-5 py-2.5 rounded-xl bg-rose-500 text-white font-medium text-sm hover:bg-rose-600 transition-colors shadow-lg shadow-rose-500/20">
+                        Retry Scan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const themeSwitch = document.getElementById('theme-switch');
+        const themeIcon = document.getElementById('theme-icon');
+        const logsContainer = document.getElementById('logs');
+        const scannerView = document.getElementById('scanner-view');
+        const reportView = document.getElementById('report-view');
+        const errorView = document.getElementById('error-view');
+        const countdownEl = document.getElementById('countdown');
+
+        // --- CONFIGURATION ---
+        const SIMULATE_ERROR = false; // Set to true to test error screen
+        const DASHBOARD_URL = "{% url 'institution:dashboard' %}";
+        let countdownValue = 3;
+
+        // Logic
+        function updateIcon() {
+            const isDark = document.documentElement.classList.contains('dark');
+            themeIcon.className = isDark ? 'fa-solid fa-sun text-lg text-yellow-400' : 'fa-solid fa-moon text-lg text-slate-600';
+        }
+        updateIcon();
+
+        themeSwitch.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            updateIcon();
+        });
+
+        const logMessages = [
+            { msg: "Initializing root protocols...", color: "text-slate-500 dark:text-slate-400" },
+            { msg: "Mounting secure gateway interface...", color: "text-indigo-500" },
+            { msg: "Verifying handshake tokens...", color: "text-slate-500 dark:text-slate-400" },
+            { msg: "Scanning entry nodes for anomalies...", color: "text-amber-500" },
+            { msg: "Analyzing packet traffic (inbound/outbound)...", color: "text-slate-500 dark:text-slate-400" },
+            { msg: "Checking database integrity checksums...", color: "text-blue-400" },
+            { msg: "Validating firewall ruleset v4.2...", color: "text-slate-500 dark:text-slate-400" },
+            { msg: "Optimizing session encryption keys...", color: "text-purple-400" },
+            { msg: "System hardening verified.", color: "text-emerald-500" },
+            { msg: "Audit complete. Generating report...", color: "text-emerald-500 font-bold" }
+        ];
+
+        let i = 0;
+        function addLog() {
+            if (i < logMessages.length) {
+                // If simulating error, hijack the flow at logical point
+                if (SIMULATE_ERROR && i === 6) {
+                    triggerError();
+                    return;
+                }
+
+                const log = logMessages[i];
+                const div = document.createElement('div');
+                // Use Tailwind arbitrary animation for fade-in
+                div.className = "flex items-start gap-2 animate-[fadeIn_0.3s_ease-out]";
+
+                const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false, hour: "numeric", minute: "numeric", second: "numeric" });
+
+                div.innerHTML = `
+                    <span class="text-xs text-slate-400 opacity-50 font-mono min-w-[65px]">[${timestamp}]</span>
+                    <span class="${log.color}">${log.msg}</span>
+                `;
+
+                logsContainer.appendChild(div);
+                logsContainer.scrollTop = logsContainer.scrollHeight;
+
+                i++;
+                // Variable speed typing effect
+                setTimeout(addLog, Math.random() * 400 + 100);
+            } else {
+                setTimeout(showReport, 800);
+            }
+        }
+
+        function triggerError() {
+            const div = document.createElement('div');
+            div.className = "flex items-start gap-2";
+            div.innerHTML = `
+                    <span class="text-xs text-slate-400 opacity-50 font-mono min-w-[65px]">[CRITICAL]</span>
+                    <span class="text-red-500 font-bold">FAILURE: Firewall integrity compromised!</span>
+                `;
+            logsContainer.appendChild(div);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+
+            setTimeout(() => {
+                scannerView.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => {
+                    scannerView.style.display = 'none';
+                    errorView.classList.remove('hidden');
+                }, 500);
+            }, 1000);
+        }
+
+        function showReport() {
+            scannerView.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                scannerView.style.display = 'none';
+                reportView.classList.remove('hidden');
+
+                // Trigger Fade In
+                requestAnimationFrame(() => {
+                    reportView.classList.remove('scale-95', 'opacity-0');
+                    reportView.classList.add('scale-100', 'opacity-100');
+                });
+
+                // Auto Redirect Countdown
+                if (!SIMULATE_ERROR) {
+                    const timer = setInterval(() => {
+                        countdownValue--;
+                        if (countdownValue > 0) {
+                            countdownEl.innerText = countdownValue;
+                        } else {
+                            clearInterval(timer);
+                            window.location.href = DASHBOARD_URL;
+                        }
+                    }, 1000);
+                }
+            }, 500);
+        }
+
+        // Use a Keyframe injection for the one-off fadeIn animation used in JS
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(5px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Start
+        setTimeout(addLog, 500);
+
+    </script>
+</body>
+
+</html>

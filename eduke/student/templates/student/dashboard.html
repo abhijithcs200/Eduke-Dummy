@@ -1,0 +1,350 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Eduke Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            dark: '#4f0074'
+                        }
+                    }
+                }
+            }
+        }
+
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+            transition: all 0.5s ease;
+        }
+
+        .dark body { background-color: #020617; }
+
+        /* Animated Mesh Background */
+        .mesh-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            opacity: 0.6;
+        }
+
+        .blob {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.12) 0%, transparent 70%);
+            filter: blur(100px);
+            border-radius: 50%;
+            animation: move 25s infinite alternate ease-in-out;
+        }
+
+        @keyframes move {
+            from { transform: translate(-15%, -15%) rotate(0deg); }
+            to { transform: translate(25%, 25%) rotate(30deg); }
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(18px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #7c3aed;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after, .nav-link.active::after {
+            width: 100%;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .card-hover {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="antialiased text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+    <div class="mesh-container">
+        <div class="blob" style="top: -100px; left: -100px;"></div>
+        <div class="blob" style="bottom: -100px; right: -100px; background: radial-gradient(circle, rgba(0, 242, 255, 0.08) 0%, transparent 70%);"></div>
+    </div>
+
+    <nav class="sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto glass-panel rounded-[2rem] px-8 py-3 flex items-center justify-between shadow-lg shadow-black/5">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-600/30">
+                    <i class="fas fa-brain text-lg"></i>
+                </div>
+                <h1 class="hidden md:block text-xl font-extrabold tracking-tighter uppercase">Eduke</h1>
+            </div>
+
+            <div class="hidden lg:flex items-center gap-8">
+                <a href="#" class="nav-link active text-sm font-bold text-brand-600">Dashboard</a>
+                <a href="#" class="nav-link text-sm font-bold text-slate-500 hover:text-brand-600">Subjects</a>
+                <a href="#" class="nav-link text-sm font-bold text-slate-500 hover:text-brand-600">Schedule</a>
+                <a href="#" class="nav-link text-sm font-bold text-slate-500 hover:text-brand-600">Assignments</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="hidden sm:flex items-center bg-slate-100 dark:bg-slate-800/50 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <i class="fas fa-search text-xs text-slate-400 mr-2"></i>
+                    <input type="text" placeholder="Quick search..." class="bg-transparent text-xs focus:outline-none w-32">
+                    <span class="text-[10px] bg-white dark:bg-slate-700 px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-600 text-slate-400 font-mono">⌘K</span>
+                </div>
+
+                <button id="theme-toggle" class="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                    <i id="theme-icon" class="fas fa-moon dark:text-yellow-400"></i>
+                </button>
+
+                <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 mx-2"></div>
+
+                <div class="group relative cursor-pointer">
+                    <div class="flex items-center gap-2">
+                        <div class="w-9 h-9 bg-brand-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md">
+                            {{ student.first_name.0 }}
+                        </div>
+                        <i class="fas fa-chevron-down text-[10px] text-slate-400"></i>
+                    </div>
+                    <div class="absolute right-0 mt-4 w-48 glass-panel rounded-2xl p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all shadow-xl">
+                        <a href="{% url 'student:profile' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-brand-600 hover:text-white transition-all text-sm font-semibold">
+                            <i class="fas fa-user-circle"></i> Profile
+                        </a>
+                        <a href="{% url 'logout' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500 hover:text-white transition-all text-sm font-semibold text-red-500">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-1 max-w-7xl mx-auto w-full px-6 py-6">
+        
+        <header class="mb-10 text-center lg:text-left">
+            <h2 class="text-4xl font-black tracking-tight text-slate-800 dark:text-white">
+                Morning, <span class="text-brand-600">{{ student.first_name }}</span>!
+            </h2>
+            <p class="text-slate-500 font-medium mt-2">You have 2 exams coming up this week. Stay focused.</p>
+        </header>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="mb-8 p-4 rounded-3xl flex items-center gap-4 glass-panel border-l-4 {% if message.tags == 'error' %}border-red-500 text-red-600{% else %}border-emerald-500 text-emerald-600{% endif %} animate-fade-in shadow-sm">
+                <i class="fas fa-circle-check"></i>
+                <span class="text-sm font-bold uppercase tracking-wide">{{ message }}</span>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <div class="lg:col-span-8 space-y-8">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div class="glass-panel p-6 rounded-[2.5rem] card-hover border-t-4 border-blue-500">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Active Subjects</p>
+                        <h4 class="text-4xl font-black mt-2">05</h4>
+                        <div class="mt-4 flex -space-x-2">
+                            <div class="w-7 h-7 rounded-full border-2 border-white dark:border-slate-800 bg-red-400"></div>
+                            <div class="w-7 h-7 rounded-full border-2 border-white dark:border-slate-800 bg-blue-400"></div>
+                            <div class="w-7 h-7 rounded-full border-2 border-white dark:border-slate-800 bg-purple-400"></div>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-6 rounded-[2.5rem] card-hover border-t-4 border-amber-500">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Pending Tasks</p>
+                        <h4 class="text-4xl font-black mt-2">07</h4>
+                        <p class="text-[10px] text-emerald-500 font-bold mt-2"><i class="fas fa-arrow-down mr-1"></i> 2 since yesterday</p>
+                    </div>
+                    <div class="glass-panel p-6 rounded-[2.5rem] card-hover border-t-4 border-brand-600">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Attendance</p>
+                        <h4 class="text-4xl font-black mt-2">94%</h4>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-4 overflow-hidden">
+                            <div class="bg-brand-600 h-full w-[94%]"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-8 rounded-[3rem]">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-xl font-black italic tracking-tight">ANNOUNCEMENTS</h3>
+                        <div class="flex gap-2">
+                            <button class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs hover:bg-brand-600 hover:text-white transition-all"><i class="fas fa-chevron-left"></i></button>
+                            <button class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs hover:bg-brand-600 hover:text-white transition-all"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-6 p-4 rounded-3xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-700">
+                            <div class="w-14 h-14 bg-brand-100 dark:bg-brand-900/30 text-brand-600 rounded-2xl flex items-center justify-center shrink-0">
+                                <i class="fas fa-bullhorn text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h5 class="font-bold text-slate-800 dark:text-slate-100">Mid-term Schedule Finalized</h5>
+                                <p class="text-xs text-slate-500 mt-1 font-medium">Please check the examination portal for seat allotments.</p>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase">2h ago</span>
+                        </div>
+                        <div class="flex items-center gap-6 p-4 rounded-3xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-700">
+                            <div class="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0">
+                                <i class="fas fa-check-double text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h5 class="font-bold text-slate-800 dark:text-slate-100">Maths Grade Published</h5>
+                                <p class="text-xs text-slate-500 mt-1 font-medium">Assignment #4: Differential Equations - 95/100.</p>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase">1d ago</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-4 space-y-8">
+                
+                <div class="glass-panel p-8 rounded-[3rem] bg-gradient-to-br from-brand-600 to-brand-700 text-white shadow-brand-600/20 shadow-xl overflow-hidden relative">
+                    <i class="fas fa-calendar-day absolute -bottom-4 -right-4 text-9xl opacity-10"></i>
+                    <h3 class="text-lg font-bold opacity-80 uppercase tracking-widest">Next Exam</h3>
+                    <h4 class="text-3xl font-black mt-4">Mathematics II</h4>
+                    <p class="text-sm font-medium mt-1 text-white/70">Thursday, 15 Jan • 09:00 AM</p>
+                    <button class="mt-8 bg-white text-brand-600 w-full py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-all">Download Syllabus</button>
+                </div>
+
+                <div class="glass-panel p-8 rounded-[3rem]">
+                    <h3 class="text-xl font-black italic tracking-tight mb-8 uppercase">Timeline</h3>
+                    <div class="space-y-8 relative before:absolute before:left-[1.7rem] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100 dark:before:bg-slate-800">
+                        <div class="flex gap-6 relative z-10">
+                            <div class="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center shrink-0">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase">Jan</span>
+                                <span class="text-lg font-black leading-none">20</span>
+                            </div>
+                            <div class="pt-2">
+                                <p class="font-bold text-sm">AI Project Submission</p>
+                                <p class="text-xs text-slate-500 font-mono mt-1 italic">Submission Link Active</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-6 relative z-10">
+                            <div class="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center shrink-0">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase">Jan</span>
+                                <span class="text-lg font-black leading-none">25</span>
+                            </div>
+                            <div class="pt-2">
+                                <p class="font-bold text-sm">Annual Sports Meet</p>
+                                <p class="text-xs text-slate-500 font-mono mt-1">College Grounds</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <div class="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] z-50">
+        <div class="glass-panel rounded-[2rem] px-8 py-4 flex items-center justify-between shadow-2xl">
+            <a href="#" class="text-brand-600 text-xl"><i class="fas fa-grid-2"></i></a>
+            <a href="#" class="text-slate-400 text-xl"><i class="fas fa-book-open"></i></a>
+            <div class="w-12 h-12 bg-brand-600 rounded-full flex items-center justify-center text-white -mt-10 shadow-lg shadow-brand-600/40">
+                <i class="fas fa-plus"></i>
+            </div>
+            <a href="#" class="text-slate-400 text-xl"><i class="fas fa-calendar-days"></i></a>
+            <a href="#" class="text-slate-400 text-xl"><i class="fas fa-user"></i></a>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true });
+
+        // Theme Switcher
+        const themeBtn = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const html = document.documentElement;
+
+        function updateTheme(isDark) {
+            if (isDark) {
+                html.classList.add('dark');
+                themeIcon.className = 'fas fa-sun text-yellow-400';
+            } else {
+                html.classList.remove('dark');
+                themeIcon.className = 'fas fa-moon text-slate-600';
+            }
+        }
+
+        themeBtn.addEventListener('click', () => {
+            const isDark = !html.classList.contains('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            updateTheme(isDark);
+        });
+
+        // Search Shortcut
+        window.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                document.querySelector('input').focus();
+            }
+        });
+
+        // Hide Messages
+        setTimeout(() => {
+            document.querySelectorAll('.animate-fade-in').forEach(m => {
+                m.style.opacity = "0";
+                m.style.transform = "translateY(-10px)";
+                setTimeout(() => m.remove(), 500);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

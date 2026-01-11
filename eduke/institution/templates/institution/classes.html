@@ -1,0 +1,1780 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eduke | Academic Infrastructure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{% static 'images/logobase_white.png' %}">
+
+    <script>
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd', 400: '#a78bfa',
+                            500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9', 800: '#5b21b6', 900: '#4c1d95',
+                        },
+                        accent: { fuchsia: '#d946ef', indigo: '#6366f1', rose: '#f43f5e', amber: '#f59e0b', emerald: '#10b981' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+            transition: background-color 0.3s ease;
+        }
+
+        .dark body {
+            background-color: #020617;
+        }
+
+        #spotlight {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at var(--x) var(--y), rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+            z-index: 1;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .manual-input input,
+        .manual-input select {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border-radius: 1rem;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e293b;
+            transition: all 0.3s ease;
+        }
+
+        .dark .manual-input input {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: white !important;
+        }
+
+        .manual-input input:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        }
+
+        .faq-details[open] summary i {
+            transform: rotate(180deg);
+            color: #8b5cf6;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        @keyframes slide-up {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .animate-slide-up {
+            animation: slide-up 0.4s ease-out forwards;
+        }
+
+        .toast-fade-out {
+            opacity: 0;
+            transform: translateX(20px);
+            margin-top: -60px;
+            /* Collapses the space smoothly */
+            pointer-events: none;
+        }
+
+        .progress-bar {
+            transition: width 5s linear;
+            /* Matches the 5 second timeout */
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #8b5cf633;
+            border-radius: 10px;
+        }
+
+        @keyframes shimmer {
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .data-table-row {
+            transition: all 0.2s ease;
+        }
+
+        .data-table-row {
+            transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: rowSlideIn 0.5s ease-out forwards;
+        }
+
+        @keyframes rowSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 767px) {
+            .data-table-row {
+                display: block;
+                border: 1px solid rgba(226, 232, 240, 0.8);
+                border-radius: 1.5rem;
+                background: white !important;
+                padding: 1.25rem;
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+            }
+
+            .dark .data-table-row {
+                background: rgba(15, 23, 42, 0.6) !important;
+                border-color: rgba(255, 255, 255, 0.05);
+            }
+
+            .data-table-row td {
+                display: block;
+                padding: 0.4rem 0 !important;
+                text-align: left !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="antialiased overflow-x-hidden">
+    <div id="spotlight"></div>
+
+    <div class="relative z-10 flex h-screen p-0 lg:p-6 gap-0 lg:gap-6 overflow-hidden">
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-50 w-72 transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-500 ease-in-out h-[100dvh] lg:h-full">
+
+            <div
+                class="flex flex-col h-full glass-sidebar lg:rounded-[3rem] shadow-2xl overflow-hidden border-r border-white/5 bg-[#0a0a14]/80 backdrop-blur-xl">
+
+                <div class="p-8 pb-4 shrink-0 flex items-center justify-between">
+                    <div class="flex items-center gap-3 group cursor-pointer">
+                        <div
+                            class="w-10 h-10 rounded-xl flex items-center justify-center border border-slate-200 dark:border-white/10 bg-white/10 dark:bg-white/5 group-hover:rotate-12 transition-transform animate-pulse bg-gradient-to-r from-brand-500 via-accent-fuchsia to-indigo-500 bg-[length:200%_200%]">
+                            <img src="{% static 'images/logobase_white.png' %}" alt="Eduke Logo"
+                                class="w-6 h-6 object-contain animate-color-cycle">
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-black tracking-tighter text-white uppercase text-nowrap">
+                                Eduke<span class="text-accent-fuchsia">.</span>
+                            </h2>
+                            <p class="text-[8px] font-black text-brand-400 uppercase tracking-[0.3em]">Portal</p>
+                        </div>
+                    </div>
+
+                    <button id="close-sidebar"
+                        class="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 text-slate-400 hover:text-white transition-all">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+
+
+                <nav class="flex-grow px-4 space-y-4 overflow-y-auto custom-scroll py-2">
+
+                    <div>
+                        <p class="px-6 text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">Command</p>
+                        <div class="space-y-1">
+
+                            <a href="{% url 'institution:dashboard' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'dashboard' %} 
+                            bg-brand-500/10 border border-brand-500/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                                {% if request.resolver_match.url_name == 'dashboard' %}
+                                <span
+                                    class="absolute left-2 w-1 h-4 bg-brand-500 rounded-full shadow-[0_0_10px_#8b5cf6]"></span>
+                                {% endif %}
+
+                                <i
+                                    class="fa-solid fa-layer-group text-base {% if request.resolver_match.url_name == 'dashboard' %} text-brand-400 {% else %} group-hover:text-brand-400 {% endif %}"></i>
+                                <span class="font-bold text-sm">Dashboard</span>
+                            </a>
+
+                            <a href="{% url 'institution:manage_student' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'manage_student' %} 
+                            bg-accent-fuchsia/10 border border-accent-fuchsia/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                                {% if request.resolver_match.url_name == 'manage_student' %}
+                                <span
+                                    class="absolute left-2 w-1 h-4 bg-accent-fuchsia rounded-full shadow-[0_0_10px_#d946ef]"></span>
+                                {% endif %}
+
+                                <i
+                                    class="fa-solid fa-user-shield text-base {% if request.resolver_match.url_name == 'manage_student' %} text-accent-fuchsia {% else %} group-hover:text-accent-fuchsia {% endif %}"></i>
+                                <span class="font-bold text-sm">Students</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="px-6 text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">Operations
+                        </p>
+                        <div class="space-y-1">
+
+                            <a href="{% url 'institution:classes' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'classes' %} 
+                            bg-indigo-500/10 border border-indigo-500/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                                {% if request.resolver_match.url_name == 'classes' %}
+                                <span
+                                    class="absolute left-2 w-1 h-4 bg-indigo-500 rounded-full shadow-[0_0_10px_#6366f1]"></span>
+                                {% endif %}
+
+                                <i
+                                    class="fa-solid fa-chalkboard-user text-base {% if request.resolver_match.url_name == 'classes' %} text-indigo-400 {% else %} group-hover:text-indigo-400 {% endif %}"></i>
+                                <span class="font-bold text-sm">Manage Classes</span>
+                            </a>
+
+                            <a href="{% url 'institution:subjects' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'subjects' %} 
+                            bg-emerald-500/10 border border-emerald-500/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                                {% if request.resolver_match.url_name == 'subjects' %}
+                                <span
+                                    class="absolute left-2 w-1 h-4 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]"></span>
+                                {% endif %}
+
+                                <i
+                                    class="fa-solid fa-book-open-reader text-base {% if request.resolver_match.url_name == 'subjects' %} text-emerald-400 {% else %} group-hover:text-emerald-400 {% endif %}"></i>
+                                <span class="font-bold text-sm">Subject Head</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <p class="px-6 text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">User</p>
+                        <div class="space-y-1">
+                            <a href="{% url 'institution:profile' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'profile' %} 
+                            bg-brand-500/10 border border-brand-500/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                                {% if request.resolver_match.url_name == 'profile' %}
+                                <span
+                                    class="absolute left-2 w-1 h-4 bg-brand-500 rounded-full shadow-[0_0_10px_#8b5cf6]"></span>
+                                {% endif %}
+
+                                <i
+                                    class="fa-solid fa-circle-user text-base {% if request.resolver_match.url_name == 'profile' %} text-brand-400 {% else %} group-hover:text-brand-400 {% endif %}"></i>
+                                <span class="font-bold text-sm">{{ institution.abbreviation|default:"User" }}
+                                    Profile</span>
+                            </a>
+                        </div>
+                    </div>
+                </nav>
+
+                <div class="p-4 shrink-0 mt-auto mb-2 lg:mb-4">
+                    <div
+                        class="relative overflow-hidden group bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-4 flex flex-col gap-3 transition-all hover:border-white/20">
+                        <div class="flex items-center gap-3">
+                            <div class="relative flex-shrink-0">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center border border-white/20 shadow-lg">
+                                    <span class="text-[11px] font-black text-white uppercase">
+                                        {{ institution.abbreviation|default:"EDU" }}</span>
+                                </div>
+                                <div
+                                    class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-[#0a0a14] rounded-full">
+                                </div>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <h4 class="text-[11px] font-black text-white truncate tracking-tight mb-0.5">
+                                    {{ institution.name|default:"Main Campus" }}
+                                </h4>
+                                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none">
+                                    Admin</p>
+                            </div>
+                        </div>
+
+                        <div class="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+                        <a href="{% url 'logout' %}"
+                            class="group/btn relative flex items-center justify-between px-4 py-2.5 rounded-xl bg-rose-500/5 hover:bg-rose-500 border border-rose-500/20 hover:border-rose-500 transition-all duration-300">
+                            <span
+                                class="text-[9px] font-black uppercase tracking-widest text-rose-400 group-hover/btn:text-white">Logout</span>
+                            <i
+                                class="fa-solid fa-power-off text-[10px] text-rose-500 group-hover/btn:text-white transition-colors"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col min-w-0">
+            <header class="h-20 flex items-center justify-between px-8 shrink-0">
+                <div class="flex items-center gap-4">
+                    <button onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full')"
+                        class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl glass-card">
+                        <i
+                            class="fa-solid fa-bars-staggered bg-gradient-to-br from-brand-600 to-accent-fuchsia bg-clip-text text-transparent"></i>
+                    </button>
+                    <h1 class="text-xl font-black dark:text-white uppercase tracking-tight">Academic <span
+                            class="text-brand-500">Infrastructure</span></h1>
+                </div>
+                <button id="theme-switch"
+                    class="w-12 h-12 rounded-2xl glass-card flex items-center justify-center hover:scale-105 transition-all">
+                    <i id="theme-icon" class="fa-solid fa-moon text-brand-600 dark:text-amber-400 text-lg"></i>
+                </button>
+            </header>
+
+            <div class="flex-1 overflow-y-auto px-4 custom-scroll lg:px-8 pb-10">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-5xl mx-auto p-4">
+                    <button onclick="toggleSection('class-form-section')"
+                        class="group relative flex items-center gap-5 p-5 rounded-[1.75rem] bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-white/5 text-left transition-all duration-500 hover:border-emerald-500/50 hover:shadow-[0_15px_40px_-12px_rgba(16,185,129,0.2)] overflow-hidden">
+
+                        <div
+                            class="absolute -inset-px rounded-[1.75rem] bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        </div>
+
+                        <div class="relative flex-shrink-0">
+                            <div
+                                class="absolute inset-0 bg-emerald-400 blur-xl opacity-0 group-hover:opacity-30 group-hover:animate-pulse transition-opacity duration-700">
+                            </div>
+                            <div
+                                class="relative w-14 h-14 rounded-2xl bg-slate-50 dark:bg-emerald-500/10 border border-slate-200 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 shadow-inner">
+                                <i class="fa-solid fa-plus text-xl"></i>
+                            </div>
+                        </div>
+
+                        <div class="relative z-10 flex-grow">
+                            <h3
+                                class="font-black text-slate-900 dark:text-white text-lg tracking-tight leading-none group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                Manual Creation
+                            </h3>
+                            <p
+                                class="text-slate-500 dark:text-slate-400 text-xs font-medium mt-1 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
+                                Add a single class record.
+                            </p>
+
+                            <div
+                                class="flex items-center gap-2 mt-2 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] uppercase tracking-wider">
+                                <span class="translate-x-0 group-hover:translate-x-1 transition-transform">Get
+                                    Started</span>
+                                <i
+                                    class="fa-solid fa-arrow-right opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
+                            </div>
+                        </div>
+
+                        <div
+                            class="absolute -top-2 -right-2 p-4 opacity-[0.03] group-hover:opacity-[0.08] group-hover:rotate-12 transition-all duration-1000">
+                            <i class="fa-solid fa-pen-nib text-6xl text-emerald-900 dark:text-white"></i>
+                        </div>
+                    </button>
+
+                    <button onclick="toggleSection('import-section')"
+                        class="group relative flex items-center gap-5 p-5 rounded-[1.75rem] bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-white/5 text-left transition-all duration-500 hover:border-indigo-500/50 hover:shadow-[0_15px_40px_-12px_rgba(99,102,241,0.25)] overflow-hidden">
+
+                        <div
+                            class="absolute -inset-px rounded-[1.75rem] bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        </div>
+
+                        <div class="relative flex-shrink-0">
+                            <div
+                                class="absolute inset-0 bg-indigo-400 blur-xl opacity-0 group-hover:opacity-30 group-hover:animate-pulse transition-opacity duration-700">
+                            </div>
+                            <div
+                                class="relative w-14 h-14 rounded-2xl bg-slate-50 dark:bg-indigo-500/10 border border-slate-200 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-inner">
+                                <i class="fa-solid fa-file-import text-xl"></i>
+                            </div>
+                        </div>
+
+                        <div class="relative z-10 flex-grow">
+                            <h3
+                                class="font-black text-slate-900 dark:text-white text-lg tracking-tight leading-none group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                Bulk Synchronization
+                            </h3>
+                            <p
+                                class="text-slate-500 dark:text-slate-400 text-xs font-medium mt-1 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
+                                Import via CSV/Excel.
+                            </p>
+
+                            <div
+                                class="flex items-center gap-2 mt-2 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] uppercase tracking-wider">
+                                <span class="translate-x-0 group-hover:translate-x-1 transition-transform">Upload
+                                    Data</span>
+                                <i
+                                    class="fa-solid fa-arrow-right opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
+                            </div>
+                        </div>
+
+                        <div
+                            class="absolute -top-2 -right-2 p-4 opacity-[0.03] group-hover:opacity-[0.08] group-hover:-rotate-12 transition-all duration-1000">
+                            <i class="fa-solid fa-database text-6xl text-indigo-900 dark:text-white"></i>
+                        </div>
+                    </button>
+                </div>
+
+                <div id="class-form-section" class="hidden mb-10 transition-all duration-500">
+                    <div class="glass-card rounded-[2.5rem] p-6 lg:p-10 border-2 border-brand-500/20 shadow-2xl">
+                        <div class="flex items-center justify-between mb-8">
+                            <h3 class="text-xs font-black text-brand-600 uppercase tracking-[0.3em]">Identity Protocol
+                            </h3>
+                            <button onclick="toggleSection('class-form-section')"
+                                class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-times"></i></button>
+                        </div>
+                        <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {% csrf_token %}
+                            <input type="hidden" name="manual_entry" value="true">
+                            <div class="space-y-3 manual-input"><label
+                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Class
+                                    Name</label>{{ form.class_name }}</div>
+                            <div class="space-y-3 manual-input"><label
+                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Academic
+                                    Head</label>{{ form.class_head }}</div>
+                            <div class="space-y-3 manual-input"><label
+                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Email</label>
+                                {{ form.email }}</div>
+                            <div class="space-y-3 manual-input">
+                                <label
+                                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Password</label>
+                                {{ form.password }}
+                                <div id="validation-grid" class="grid grid-cols-2 gap-1 mt-3 ml-2">
+                                    <div id="v-len" class="text-[9px] font-black uppercase text-rose-500">● 6+ Chars
+                                    </div>
+                                    <div id="v-up" class="text-[9px] font-black uppercase text-rose-500">● 1 Uppercase
+                                    </div>
+                                    <div id="v-low" class="text-[9px] font-black uppercase text-rose-500">● 1 Lowercase
+                                    </div>
+                                    <div id="v-num" class="text-[9px] font-black uppercase text-rose-500">● 1 Digit
+                                    </div>
+                                    <div id="v-spl" class="text-[9px] font-black uppercase text-rose-500">● 1 Special
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" id="submit-btn" disabled
+                                class="md:col-span-2 py-5 bg-slate-200 dark:bg-slate-800 text-slate-400 rounded-2xl font-black text-sm uppercase tracking-widest cursor-not-allowed">Secure
+                                Credentials Required <i class="fa-solid fa-lock ml-2"></i></button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="import-section" class="hidden mb-10 transition-all duration-500">
+                    <div class="glass-card rounded-[2.5rem] p-6 lg:p-8">
+                        <div class="flex items-center justify-between mb-8">
+                            <h3 class="text-xs font-black text-indigo-600 uppercase tracking-[0.3em]">Bulk
+                                Synchronization</h3>
+                            <button onclick="toggleSection('import-section')"
+                                class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-times"></i></button>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                            <div class="lg:col-span-5">
+                                <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="bulk_upload" value="true">
+
+                                    <label
+                                        class="group relative flex flex-col items-center justify-center w-full h-64 border-2 border-indigo-300 dark:border-indigo-500/30 border-dashed rounded-[2.5rem] cursor-pointer bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 hover:from-indigo-100 hover:to-purple-100 dark:hover:from-indigo-900/30 dark:hover:to-purple-900/30 transition-all duration-500 overflow-hidden">
+
+                                        <div
+                                            class="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-purple-500/10 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                                        </div>
+
+                                        <div
+                                            class="relative mb-4 transform group-hover:scale-110 group-hover:-translate-y-3 transition-all duration-500">
+                                            <div
+                                                class="absolute inset-0 bg-indigo-400 blur-2xl opacity-0 group-hover:opacity-40 animate-pulse">
+                                            </div>
+                                            <div
+                                                class="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center shadow-2xl group-hover:shadow-indigo-500/50 transition-all duration-500">
+                                                <i
+                                                    class="fa-solid fa-cloud-arrow-up text-white text-3xl group-hover:animate-bounce"></i>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-center relative z-10 px-4">
+                                            <p id="file-label"
+                                                class="text-lg font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-tight mb-1">
+                                                Drop Dataset Here
+                                            </p>
+                                            <p class="text-sm font-bold text-slate-500 dark:text-slate-400">
+                                                or click to browse local files
+                                            </p>
+
+                                            <div class="flex items-center justify-center gap-2 mt-4">
+                                                <span
+                                                    class="px-3 py-1 bg-white/80 dark:bg-slate-800 border border-indigo-100 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-300 rounded-lg text-[10px] font-black shadow-sm">CSV</span>
+                                                <span
+                                                    class="px-3 py-1 bg-white/80 dark:bg-slate-800 border border-emerald-100 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400 rounded-lg text-[10px] font-black shadow-sm">XLSX</span>
+                                                <span
+                                                    class="px-3 py-1 bg-white/80 dark:bg-slate-800 border border-purple-100 dark:border-purple-500/30 text-purple-600 dark:text-purple-400 rounded-lg text-[10px] font-black shadow-sm">JSON</span>
+                                            </div>
+
+                                            <p id="file-name-display"
+                                                class="mt-4 text-xs font-bold text-emerald-600 dark:text-emerald-400 animate-pulse hidden">
+                                            </p>
+                                        </div>
+
+                                        <div
+                                            class="absolute top-6 right-6 w-12 h-12 border-t-4 border-r-4 border-indigo-200 dark:border-indigo-500/20 rounded-tr-3xl opacity-50 group-hover:opacity-100 transition-all duration-500 group-hover:translate-x-1 group-hover:-translate-y-1">
+                                        </div>
+                                        <div
+                                            class="absolute bottom-6 left-6 w-12 h-12 border-b-4 border-l-4 border-indigo-200 dark:border-indigo-500/20 rounded-bl-3xl opacity-50 group-hover:opacity-100 transition-all duration-500 group-hover:-translate-x-1 group-hover:translate-y-1">
+                                        </div>
+
+                                        <input type="file" name="file" id="file-upload" class="hidden"
+                                            accept=".csv,.xlsx,.json" onchange="displayFileName(this)" />
+                                    </label>
+
+                                    <button type="submit"
+                                        class="group relative w-full py-5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl shadow-indigo-500/30 transition-all duration-300 active:scale-[0.98] overflow-hidden">
+                                        <div
+                                            class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]">
+                                        </div>
+                                        <span class="relative z-10 flex items-center justify-center gap-3">
+                                            <i
+                                                class="fa-solid fa-bolt-lightning text-lg group-hover:rotate-12 transition-transform"></i>
+                                            Execute Sync
+                                            <i
+                                                class="fa-solid fa-arrow-right transform group-hover:translate-x-2 transition-transform"></i>
+                                        </span>
+                                    </button>
+
+                                    <div class="relative group">
+                                        <div
+                                            class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-[1.5rem] blur opacity-10 group-hover:opacity-30 transition duration-1000">
+                                        </div>
+                                        <a href="{% static 'files/Class_Upload.xlsx' %}" download
+                                            class="relative flex items-center justify-between w-full px-6 py-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl transition-all duration-300 hover:border-indigo-300 dark:hover:border-indigo-500/50">
+
+                                            <div class="flex items-center gap-4">
+                                                <div
+                                                    class="w-12 h-12 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/20 dark:to-purple-500/20 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:rotate-6 transition-transform">
+                                                    <i class="fa-solid fa-file-excel text-xl"></i>
+                                                </div>
+                                                <div class="text-left">
+                                                    <span
+                                                        class="block text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest">Resources</span>
+                                                    <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">
+                                                        Class Upload Template</h3>
+                                                </div>
+                                            </div>
+
+                                            <div
+                                                class="flex items-center gap-4 border-l border-slate-100 dark:border-slate-800 pl-4">
+                                                <div class="text-right">
+                                                    <p class="text-[9px] font-bold text-slate-400 uppercase">Size</p>
+                                                    <p
+                                                        class="text-[10px] font-black text-slate-600 dark:text-slate-300">
+                                                        12.4 KB</p>
+                                                </div>
+                                                <div
+                                                    class="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                                    <i class="fa-solid fa-download text-xs"></i>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </form>
+
+
+                            </div>
+                            <div class="lg:col-span-7 space-y-3">
+                                <h4 class="text-xs font-black text-brand-600 uppercase mb-4 tracking-widest px-2">Data
+                                    Protocol</h4>
+
+                                <details
+                                    class="faq-details group bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden transition-all duration-300 hover:border-indigo-500/50 dark:hover:border-indigo-500/30">
+                                    <summary class="flex items-center justify-between p-5 cursor-pointer list-none">
+                                        <div class="flex items-center gap-3">
+                                            <i class="fa-solid fa-table-columns text-indigo-500 text-xs"></i>
+                                            <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Required
+                                                Headers</span>
+                                        </div>
+                                        <i
+                                            class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-open:rotate-180 transition-transform duration-300"></i>
+                                    </summary>
+                                    <div
+                                        class="px-5 pb-5 pt-4 border-t border-slate-100 dark:border-white/5 bg-indigo-50/30 dark:bg-indigo-900/10">
+                                        <p class="text-xs text-slate-500 mb-2 uppercase tracking-wider font-bold">
+                                            Standard Column Mapping:</p>
+                                        <div class="flex flex-wrap gap-2">
+                                            <code
+                                                class="px-3 py-1.5 bg-indigo-100 dark:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 rounded-lg text-[11px] font-mono text-indigo-700 dark:text-indigo-300 font-bold shadow-sm">Class Name</code>
+                                            <code
+                                                class="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 rounded-lg text-[11px] font-mono text-emerald-700 dark:text-emerald-300 font-bold shadow-sm">Class Head</code>
+                                            <code
+                                                class="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/50 border border-amber-200 dark:border-amber-800 rounded-lg text-[11px] font-mono text-amber-700 dark:text-amber-300 font-bold shadow-sm">Email</code>
+                                            <code
+                                                class="px-3 py-1.5 bg-rose-100 dark:bg-rose-900/50 border border-rose-200 dark:border-rose-800 rounded-lg text-[11px] font-mono text-rose-700 dark:text-rose-300 font-bold shadow-sm">Password</code>
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <details
+                                    class="faq-details group bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden transition-all duration-300 hover:border-emerald-500/50 dark:hover:border-emerald-500/30">
+                                    <summary class="flex items-center justify-between p-5 cursor-pointer list-none">
+                                        <div class="flex items-center gap-3">
+                                            <i class="fa-solid fa-file-code text-emerald-500 text-xs"></i>
+                                            <span class="text-sm font-bold text-slate-700 dark:text-slate-200">File
+                                                Format & Encoding</span>
+                                        </div>
+                                        <i
+                                            class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-open:rotate-180 transition-transform duration-300"></i>
+                                    </summary>
+                                    <div
+                                        class="px-5 pb-5 pt-4 border-t border-slate-100 dark:border-white/5 text-sm text-slate-500 bg-emerald-50/30 dark:bg-emerald-900/10">
+                                        <p>Please ensure your file is saved as <strong
+                                                class="text-emerald-700 dark:text-emerald-300 font-bold">.xlsx</strong>
+                                            or <strong
+                                                class="text-emerald-700 dark:text-emerald-300 font-bold">.csv</strong>.
+                                            Use <span class="underline decoration-emerald-500 font-bold">UTF-8
+                                                encoding</span> to prevent
+                                            character corruption in names or special symbols.</p>
+                                    </div>
+                                </details>
+
+                                <details
+                                    class="faq-details group bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden transition-all duration-300 hover:border-amber-500/50 dark:hover:border-amber-500/30">
+                                    <summary class="flex items-center justify-between p-5 cursor-pointer list-none">
+                                        <div class="flex items-center gap-3">
+                                            <i class="fa-solid fa-circle-check text-amber-500 text-xs"></i>
+                                            <span
+                                                class="text-sm font-bold text-slate-700 dark:text-slate-200">Validation
+                                                Rules</span>
+                                        </div>
+                                        <i
+                                            class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-open:rotate-180 transition-transform duration-300"></i>
+                                    </summary>
+                                    <div
+                                        class="px-5 pb-5 pt-4 border-t border-slate-100 dark:border-white/5 space-y-3 bg-amber-50/30 dark:bg-amber-900/10">
+                                        <div class="flex items-start gap-2 text-xs text-slate-500">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0"></span>
+                                            <span class="text-amber-700 dark:text-amber-300 font-bold">Emails must be
+                                                unique and valid (e.g., name@school.edu).</span>
+                                        </div>
+                                        <div class="flex items-start gap-2 text-xs text-slate-500">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0"></span>
+                                            <span class="text-amber-700 dark:text-amber-300 font-bold">Passwords must be
+                                                at least 6+ characters long, include (1 uppercase, 1
+                                                lowercase, 1 specail char, 1 digit).</span>
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <details
+                                    class="faq-details group bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden transition-all duration-300 hover:border-rose-500/50 dark:hover:border-rose-500/30">
+                                    <summary class="flex items-center justify-between p-5 cursor-pointer list-none">
+                                        <div class="flex items-center gap-3">
+                                            <i class="fa-solid fa-triangle-exclamation text-rose-500 text-xs"></i>
+                                            <span class="text-sm font-bold text-slate-700 dark:text-slate-200">System
+                                                Limits</span>
+                                        </div>
+                                        <i
+                                            class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-open:rotate-180 transition-transform duration-300"></i>
+                                    </summary>
+                                    <div
+                                        class="px-5 pb-5 pt-4 border-t border-slate-100 dark:border-white/5 flex justify-between items-center text-xs bg-rose-50/30 dark:bg-rose-900/10">
+                                        <span class="text-rose-700 dark:text-rose-300 font-bold">Maximum Batch
+                                            Size:</span>
+                                        <span
+                                            class="font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-900/50 border border-rose-200 dark:border-rose-800 px-3 py-1 rounded-lg shadow-sm">500
+                                            Rows / Upload</span>
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="relative overflow-hidden rounded-[2.5rem] border border-white/20 bg-white/10 shadow-xl backdrop-blur-md dark:bg-slate-900/40">
+
+                    <div class="p-8 pb-0 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                        <div class="flex items-center gap-4">
+                            <div class="flex -space-x-2">
+                                <div class="h-8 w-3 -rotate-12 transform rounded-full bg-blue-700"></div>
+                                <div class="h-8 w-3 rotate-12 transform rounded-full bg-blue-400"></div>
+                            </div>
+                            <h2
+                                class="text-3xl font-black italic uppercase tracking-tighter text-slate-900 dark:text-white">
+                                Academic <span class="text-blue-600">Inventory</span>
+                            </h2>
+                        </div>
+
+                        <div
+                            class="flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-1.5">
+                            <span class="relative flex h-2 w-2">
+                                <span
+                                    class="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
+                                <span class="relative inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
+                            </span>
+                            <p
+                                class="text-[10px] font-black uppercase tracking-widest text-blue-700 dark:text-blue-300">
+                                Live System: <span id="total-counter" class="font-mono">{{ classes|length }}</span>
+                                Classes
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Warning for missing class name mappings -->
+                    <div id="missing-mappings-warning" class="hidden">
+                        <div
+                            class="m-4 p-4 rounded-xl bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 flex items-start gap-3">
+                            <i
+                                class="fa-solid fa-triangle-exclamation text-amber-600 dark:text-amber-400 text-xl mt-0.5"></i>
+                            <div>
+                                <h3 class="font-bold text-amber-800 dark:text-amber-200 mb-1">Missing Class Name
+                                    Mappings</h3>
+                                <p class="text-amber-700 dark:text-amber-300 text-sm mb-2"></p>
+                                <button onclick="showMappingModal()"
+                                    class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors">
+                                    Update Mappings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hidden md:block">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-200/50 dark:bg-white/5 border-y border-white/10">
+                                    <th
+                                        class="pl-10 pr-6 py-5 text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-[0.2em]">
+                                        Class Identity</th>
+                                    <th
+                                        class="px-6 py-5 text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-[0.2em]">
+                                        System Email</th>
+                                    <th
+                                        class="px-6 py-5 text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-[0.2em]">
+                                        Academic Head</th>
+                                    <th
+                                        class="pl-6 pr-10 py-5 text-[11px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-[0.2em] text-right">
+                                        Operations</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200/30 dark:divide-white/5 block md:table-row-group">
+                                {% for class in classes %}
+                                <tr class="data-table-row clickable-row group/row hover:bg-white/40 dark:hover:bg-blue-500/5 transition-all duration-200 cursor-pointer"
+                                    data-href="{% url 'institution:class_details' class.id %}">
+
+                                    <td class="pl-10 pr-6 py-6 block md:table-cell relative z-10">
+                                        <div class="flex items-center gap-5">
+                                            <div
+                                                class="px-4 py-2 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-500/20 group-hover/row:scale-105 transition-transform duration-300">
+                                                {{ class.class_name }}
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                                                <span
+                                                    class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Active</span>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td class="px-6 py-6 block md:table-cell relative z-10">
+                                        <a href="mailto:{{ class.email }}"
+                                            class="text-xs font-bold text-slate-500 dark:text-slate-300 hover:text-blue-600 font-mono transition-colors relative z-20">
+                                            {{ class.email }}
+                                        </a>
+                                    </td>
+
+                                    <td class="px-6 py-6 block md:table-cell relative z-10">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600">
+                                                <i class="fa-solid fa-user-tie"></i>
+                                            </div>
+                                            <span class="font-bold text-slate-700 dark:text-slate-100 text-sm">
+                                                {{ class.class_head }}</span>
+                                        </div>
+                                    </td>
+
+                                    <td class="pl-6 pr-10 py-6 text-right block md:table-cell relative z-10">
+                                        <div class="flex items-center justify-end gap-3"
+                                            onclick="event.stopPropagation()">
+                                            <a href="{% url 'institution:class_details' class.id %}"
+                                                class="h-10 w-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 flex items-center justify-center text-emerald-600 hover:border-emerald-500 hover:bg-emerald-50 transition-all shadow-sm">
+                                                <i class="fa-solid fa-eye text-sm"></i>
+                                            </a>
+
+                                            <button
+                                                onclick="openEditModal('{{ class.id }}', '{{ class.class_name }}', '{{ class.class_head }}', '{{ class.email }}', '{{ class.password }}')"
+                                                class="h-10 w-10 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-white/5 flex items-center justify-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 hover:border-indigo-500 transition-all"
+                                                title="Edit Entity">
+                                                <i class="fa-solid fa-pen-nib text-sm"></i>
+                                            </button>
+
+                                            <button
+                                                onclick="openDeleteModal('{{ class.id }}', '{{ class.class_name|escapejs }}')"
+                                                class="h-10 w-10 rounded-xl bg-white dark:bg-slate-800 border border-rose-100 dark:border-white/10 flex items-center justify-center text-rose-600 hover:border-rose-500 hover:bg-rose-50 transition-all shadow-sm">
+                                                <i class="fa-solid fa-trash-can text-sm"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="md:hidden p-5 space-y-4">
+                        {% for class in classes %}
+                        <div
+                            class="p-5 rounded-[2rem] bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm">
+                            <a href="{% url 'institution:class_details' class.id %}" class="block">
+                                <div class="flex justify-between items-center mb-6">
+                                    <div
+                                        class="px-4 py-1.5 rounded-full bg-blue-600 text-white font-black text-[10px] uppercase tracking-tighter shadow-lg shadow-blue-500/20">
+                                        {{ class.class_name }}
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <p class="text-sm font-bold text-slate-800 dark:text-white">{{ class.class_head  }}
+                                           
+                                        </p>
+                                        <div
+                                            class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600">
+                                            <i class="fa-solid fa-user-tie"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-y-1 mb-6">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">System
+                                        Email</p>
+                                    <p class="text-xs font-mono text-slate-600 dark:text-slate-300 truncate">
+                                        {{ class.email }}</p>
+                                </div>
+                            </a>
+                            <div class="flex gap-2">
+                                <a href="{% url 'institution:class_details' class.id %}"
+                                    class="w-14 h-13.5 flex items-center justify-center bg-white dark:bg-slate-800 text-emerald-600 rounded-2xl border border-slate-200 dark:border-white/10 active:scale-95 transition-all">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                                <button
+                                    onclick="openEditModal('{{ class.id }}', '{{ class.class_name }}', '{{ class.class_head }}', '{{ class.email }}', '{{ class.password }}')"
+                                    class="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20 active:scale-95 transition-all">
+                                    Edit <i class="fa-solid fa-pen-nib ml-1"></i>
+                                </button>
+                                <button onclick="openDeleteModal('{{ class.id }}')"
+                                    class="w-14 h-13.5 flex items-center justify-center bg-rose-50 dark:bg-rose-500/10 text-rose-500 rounded-2xl border border-rose-100 dark:border-rose-500/20 active:scale-95 transition-all">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="message-container"
+        class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[200] space-y-4 max-w-md w-full px-4 sm:left-auto sm:right-8 sm:transform-none">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="message-toast group relative overflow-hidden p-5 rounded-[2rem] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] animate-slide-up transition-all duration-500 hover:scale-[1.02]
+            {% if message.tags == 'success' %} hover:shadow-[0_20px_50px_-12px_rgba(16,185,129,0.25)] {% else %} hover:shadow-[0_20px_50px_-12px_rgba(244,63,94,0.25)] {% endif %}"
+            data-type="{{ message.tags }}">
+
+            <!-- Background Glow -->
+            <div class="absolute -right-4 -top-4 w-24 h-24 blur-3xl opacity-20 transition-opacity group-hover:opacity-40
+                {% if message.tags == 'success' %} bg-emerald-500 {% else %} bg-rose-500 {% endif %}"></div>
+
+            <div class="relative flex items-start gap-4">
+                <div class="flex-shrink-0">
+                    <div
+                        class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner
+                        {% if message.tags == 'success' %} bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 {% else %} bg-rose-500/10 text-rose-500 border border-rose-500/20 {% endif %}">
+                        <i
+                            class="fa-solid {% if message.tags == 'success' %} fa-check-double text-xl {% else %} fa-circle-exclamation text-xl {% endif %}"></i>
+                    </div>
+                </div>
+
+                <div class="flex-1 min-w-0 pt-1">
+                    <div class="flex items-center justify-between mb-1">
+                        <h4
+                            class="text-[10px] font-black uppercase tracking-[0.2em]
+                            {% if message.tags == 'success' %} text-emerald-600 dark:text-emerald-400 {% else %} text-rose-600 dark:text-rose-400 {% endif %}">
+                            System Dispatch
+                        </h4>
+                        <button onclick="dismissToast(this.closest('.message-toast'))"
+                            class="text-slate-400 hover:text-rose-500 transition-colors p-1">
+                            <i class="fa-solid fa-xmark text-sm"></i>
+                        </button>
+                    </div>
+                    <div
+                        class="text-[13px] font-bold text-slate-700 dark:text-slate-200 leading-relaxed pr-6 italic uppercase opacity-90">
+                        {{ message|safe }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Track -->
+            <div class="absolute bottom-0 left-0 w-full h-1 bg-slate-100/50 dark:bg-white/5">
+                <div class="progress-bar h-full transition-all duration-[2500ms] ease-linear
+                    {% if message.tags == 'success' %} bg-gradient-to-r from-emerald-400 to-emerald-600 {% else %} bg-gradient-to-r from-rose-400 to-rose-600 {% endif %}"
+                    style="width: 100%;"></div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- edit modal -->
+
+    <div id="edit-modal"
+        class="fixed inset-0 z-[150] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+        <div
+            class="glass-card w-full max-w-2xl rounded-[2.5rem] p-8 lg:p-10 border border-white/20 shadow-2xl bg-white/90 dark:bg-slate-900/90 animate-slide-up">
+
+            <div class="flex items-center justify-between mb-8 pb-4 border-b border-slate-100 dark:border-white/5">
+                <div>
+                    <h3 class="font-black text-slate-800 dark:text-white uppercase text-xs tracking-widest">Update
+                        Entity Protocol</h3>
+                    <p class="text-[10px] text-slate-400 uppercase mt-1">Modifying System ID: <span id="display-id"
+                            class="text-brand-500">#0</span></p>
+                </div>
+                <button type="button" onclick="closeEditModal()"
+                    class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-rose-500 transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <span id="url-template" data-url="{% url 'institution:edit_class' 0 %}" class="hidden"></span>
+
+            <form id="edit-student-form" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {% csrf_token %}
+
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Class
+                        Identity</label>
+                    <input type="text" id="edit-name" name="class_name" required
+                        class="w-full px-5 py-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none transition-all dark:text-white font-bold text-sm">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Academic
+                        Head</label>
+                    <input type="text" id="edit-roll" name="class_head" required
+                        class="w-full px-5 py-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none transition-all dark:text-white font-bold text-sm">
+                </div>
+
+                <div class="space-y-2 md:col-span-2 group">
+                    <div class="flex justify-between items-center ml-2">
+                        <label for="edit-email"
+                            class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest group-focus-within:text-indigo-500 transition-colors">
+                            System Email
+                        </label>
+                        <span
+                            class="text-[9px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-tighter bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-md">
+                            <i class="fa-solid fa-pen-to-square mr-1"></i> Editable Field
+                        </span>
+                    </div>
+
+                    <div class="relative">
+                        <input type="email" id="edit-email" name="email" required
+                            class="w-full px-5 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-bold text-slate-700 dark:text-slate-200 placeholder-slate-400
+                      focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-200 outline-none"
+                            placeholder="Enter system email...">
+
+                        <div
+                            class="absolute inset-0 rounded-2xl bg-indigo-500/5 blur-xl opacity-0 group-focus-within:opacity-100 pointer-events-none transition-opacity">
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="space-y-4 md:col-span-2 p-6 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                    <div class="flex justify-between items-center">
+                        <label class="text-[10px] font-black text-brand-500 uppercase tracking-widest">Security
+                            Credential</label>
+                        <span
+                            class="text-[9px] font-black bg-white dark:bg-slate-800 px-3 py-1 rounded-full shadow-sm text-slate-400">
+                            <i class="fa-solid fa-lock text-[8px] mr-1"></i>AUTO-HIDE ON BLUR
+                        </span>
+                    </div>
+
+                    <input type="password" id="edit-password" name="password" required
+                        class="w-full px-5 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none transition-all dark:text-white font-bold text-sm"
+                        placeholder="Enter new security key">
+
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                        <div id="ev-len"
+                            class="flex items-center gap-1.5 text-[8px] font-black uppercase text-slate-400 transition-all">
+                            <i class="fa-solid fa-shield"></i> 6+
+                        </div>
+                        <div id="ev-up"
+                            class="flex items-center gap-1.5 text-[8px] font-black uppercase text-slate-400 transition-all">
+                            <i class="fa-solid fa-font"></i> UPPER
+                        </div>
+                        <div id="ev-low"
+                            class="flex items-center gap-1.5 text-[8px] font-black uppercase text-slate-400 transition-all">
+                            <i class="fa-solid fa-italic"></i> LOWER
+                        </div>
+                        <div id="ev-num"
+                            class="flex items-center gap-1.5 text-[8px] font-black uppercase text-slate-400 transition-all">
+                            <i class="fa-solid fa-hashtag"></i> NUM
+                        </div>
+                        <div id="ev-spl"
+                            class="flex items-center gap-1.5 text-[8px] font-black uppercase text-slate-400 transition-all">
+                            <i class="fa-solid fa-percent"></i> SPEC
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2 flex gap-4 pt-4">
+                    <button type="button" onclick="closeEditModal()"
+                        class="flex-1 py-5 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95">
+                        Abort
+                    </button>
+                    <button type="submit" id="edit-submit-btn"
+                        class="flex-[2] py-5 bg-brand-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-brand-500/20 hover:bg-brand-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Update Record <i class="fa-solid fa-rotate ml-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal"
+        class="fixed inset-0 z-[160] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+        <div
+            class="glass-card w-full max-w-lg rounded-[2.5rem] p-8 lg:p-10 border border-rose-500/20 shadow-2xl bg-white/90 dark:bg-slate-900/90 animate-slide-up text-center">
+
+            <div class="mb-6 flex justify-center">
+                <div
+                    class="w-20 h-20 rounded-full bg-rose-100 dark:bg-rose-500/10 flex items-center justify-center text-rose-500 text-3xl animate-pulse">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight mb-2">Confirm
+                Termination</h3>
+            <p class="text-sm font-bold text-slate-500 dark:text-slate-400 mb-8 px-4">
+                Are you sure you want to permanently delete <span id="delete-class-name" class="text-rose-500"></span>?
+                This action cannot be reversed within the system protocol.
+            </p>
+
+            <span id="delete-url-template" data-url="{% url 'institution:delete_class' 0 %}" class="hidden"></span>
+
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button onclick="closeDeleteModal()"
+                    class="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95">
+                    Abort Deletion
+                </button>
+                <a id="confirm-delete-link" href="#"
+                    class="flex-[1.5] py-4 bg-rose-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-rose-500/20 hover:bg-rose-700 transition-all active:scale-95 flex items-center justify-center">
+                    Confirm Deletion <i class="fa-solid fa-trash-can ml-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const elements = {
+            closeBtn: document.getElementById('close-sidebar'),
+            themeBtn: document.getElementById('theme-switch'),
+            themeIcon: document.getElementById('theme-icon'),
+            spotlight: document.getElementById('spotlight'),
+            submitBtn: document.getElementById('submit-btn'),
+            passField: document.querySelector('input[type="password"]')
+        };
+
+        const validators = {
+            len: document.getElementById('v-len'),
+            up: document.getElementById('v-up'),
+            low: document.getElementById('v-low'),
+            num: document.getElementById('v-num'),
+            spl: document.getElementById('v-spl')
+        };
+
+        // Theme Toggle
+        elements.themeBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            elements.themeIcon.className = isDark ? 'fa-solid fa-sun text-lg text-amber-400' : 'fa-solid fa-moon text-brand-600 text-lg';
+        });
+
+        // Mouse Spotlight
+        window.addEventListener('mousemove', e => {
+            elements.spotlight.style.setProperty('--x', `${e.clientX}px`);
+            elements.spotlight.style.setProperty('--y', `${e.clientY}px`);
+        });
+
+        // Sidebar Control
+        const sidebar = document.getElementById('sidebar');
+
+        if (elements.closeBtn) {
+            elements.closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebar.classList.add('-translate-x-full');
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+
+        function toggleSection(sectionId) {
+            const targetSection = document.getElementById(sectionId);
+
+            // 1. Identify all potential toggleable sections
+            // Tip: Add a common class like 'toggle-content' to both section divs in your HTML
+            const allSections = ['import-section', 'class-form-section']; // Add your IDs here
+
+            allSections.forEach(id => {
+                const section = document.getElementById(id);
+                if (!section) return;
+
+                if (id === sectionId) {
+                    // Logic for the section we want to OPEN
+                    if (section.classList.contains('hidden')) {
+                        section.classList.remove('hidden');
+                        setTimeout(() => {
+                            section.classList.add('opacity-100', 'translate-y-0');
+                            section.classList.remove('opacity-0', '-translate-y-4');
+                        }, 10);
+                    } else {
+                        // If clicking the already open section, close it
+                        closeSection(section);
+                    }
+                } else {
+                    // Logic to CLOSE the other section if it's open
+                    if (!section.classList.contains('hidden')) {
+                        closeSection(section);
+                    }
+                }
+            });
+        }
+
+        // Helper function to handle the closing animation
+        function closeSection(section) {
+            section.classList.add('opacity-0', '-translate-y-4');
+            section.classList.remove('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                section.classList.add('hidden');
+            }, 500);
+        }
+
+        function showFileName(input) {
+            const display = document.getElementById('file-name');
+            if (input.files[0]) display.innerHTML = `<i class="fa-solid fa-file-csv text-emerald-500 mr-2"></i> ${input.files[0].name}`;
+        }
+
+
+        // Pass Validation Logic
+        if (elements.passField) {
+            elements.passField.addEventListener('input', (e) => {
+                const v = e.target.value;
+                const checks = {
+                    len: v.length >= 6,
+                    up: /[A-Z]/.test(v),
+                    low: /[a-z]/.test(v),
+                    num: /[0-9]/.test(v),
+                    spl: /[^A-Za-z0-9]/.test(v)
+                };
+                Object.keys(checks).forEach(k => {
+                    validators[k].classList.toggle('text-emerald-500', checks[k]);
+                    validators[k].classList.toggle('text-rose-500', !checks[k]);
+                });
+                const valid = Object.values(checks).every(Boolean);
+                elements.submitBtn.disabled = !valid;
+                elements.submitBtn.className = valid
+                    ? "md:col-span-2 py-5 bg-gradient-to-r from-brand-600 to-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:shadow-lg transition-all"
+                    : "md:col-span-2 py-5 bg-slate-200 dark:bg-slate-800 text-slate-400 rounded-2xl font-black text-sm uppercase tracking-widest cursor-not-allowed";
+                elements.submitBtn.innerHTML = valid ? 'Finalize Registration <i class="fa-solid fa-arrow-right ml-2"></i>' : 'Secure Credentials Required <i class="fa-solid fa-lock ml-2"></i>';
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const toasts = document.querySelectorAll('.message-toast');
+
+            toasts.forEach(toast => {
+                // 1. Start the progress bar animation immediately
+                const progressBar = toast.querySelector('.progress-bar');
+
+                // Check for error type using data attribute - Django message tags include 'error', 'danger', 'warning'
+                const messageType = toast.getAttribute('data-type');
+                const isError = messageType === 'error' || messageType === 'danger' || messageType === 'warning';
+
+                if (progressBar) {
+                    if (isError) {
+                        // If error, hide progress bar entirely since it's persistent
+                        progressBar.parentElement.style.display = 'none';
+                    } else {
+                        // For success messages, animate the progress bar to indicate auto-dismissal
+                        setTimeout(() => { progressBar.style.width = '0%'; }, 10);
+                    }
+                }
+
+                // 2. Set the auto-dismiss timer - ONLY for success messages
+                if (!isError) {
+                    setTimeout(() => {
+                        dismissToast(toast);
+                    }, 5000); // Auto-dismiss success messages after 5 seconds
+                }
+            });
+        });
+
+        function dismissToast(toast) {
+            if (!toast) return;
+
+            // Add the fade-out class
+            toast.classList.add('opacity-0', 'translate-x-full'); // Tailwind animations
+
+            // Remove from DOM after animation finishes
+            setTimeout(() => {
+                toast.remove();
+            }, 500);
+        }
+
+
+        // edit section
+
+        // --- MODAL & VALIDATION LOGIC ---
+        // --- MODAL & VALIDATION LOGIC ---
+        const editModal = document.getElementById('edit-modal');
+        const editForm = document.getElementById('edit-student-form');
+        const editPassField = document.getElementById('edit-password');
+        const editSubmit = document.getElementById('edit-submit-btn');
+
+        const evIcons = {
+            len: document.getElementById('ev-len'),
+            up: document.getElementById('ev-up'),
+            low: document.getElementById('ev-low'),
+            num: document.getElementById('ev-num'),
+            spl: document.getElementById('ev-spl')
+        };
+
+        // Delete Modal Logic
+        const deleteModal = document.getElementById('delete-modal');
+        const confirmDeleteLink = document.getElementById('confirm-delete-link');
+        const deleteClassNameSpan = document.getElementById('delete-class-name');
+
+        function openDeleteModal(id, name) {
+            const baseUrl = document.getElementById('delete-url-template').getAttribute('data-url');
+            confirmDeleteLink.href = baseUrl.replace('0', id);
+            deleteClassNameSpan.innerText = name;
+
+            deleteModal.classList.remove('hidden');
+            deleteModal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.add('hidden');
+            deleteModal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close delete modal when clicking on the dark backdrop
+        deleteModal.addEventListener('click', (e) => {
+            if (e.target === deleteModal) closeDeleteModal();
+        });
+
+        /**
+         * Opens the Edit Modal and populates fields
+         */
+        function openEditModal(id, name, head, email, password) {
+            // 1. Set Form Action URL
+            const baseUrl = document.getElementById('url-template').getAttribute('data-url');
+            editForm.action = baseUrl.replace('0', id);
+
+            // 2. Populate Inputs
+            document.getElementById('display-id').innerText = `#${id}`;
+            document.getElementById('edit-name').value = name;
+            document.getElementById('edit-roll').value = head;
+            document.getElementById('edit-email').value = email;
+
+            // 3. Setup Password Field
+            editPassField.value = password;
+            editPassField.type = 'password'; // Ensure it starts hidden
+
+            // 4. Initial Validation Check
+            runValidation(password);
+
+            // 5. Show Modal with Flex (for centering)
+            editModal.classList.remove('hidden');
+            editModal.classList.add('flex');
+            document.body.style.overflow = 'hidden'; // Prevent background scroll
+        }
+
+        /**
+         * Closes the Edit Modal
+         */
+        function closeEditModal() {
+            editModal.classList.add('hidden');
+            editModal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        /**
+         * Real-time Password Validation
+         */
+        function runValidation(v) {
+            const checks = {
+                len: v.length >= 6,
+                up: /[A-Z]/.test(v),
+                low: /[a-z]/.test(v),
+                num: /[0-9]/.test(v),
+                spl: /[^A-Za-z0-9]/.test(v)
+            };
+
+            Object.keys(checks).forEach(k => {
+                const el = evIcons[k];
+                if (!el) return; // Guard clause if ID is missing
+
+                if (checks[k]) {
+                    el.className = "flex items-center gap-1.5 text-[8px] font-black uppercase text-emerald-500 transition-all";
+                } else {
+                    el.className = "flex items-center gap-1.5 text-[8px] font-black uppercase text-rose-500 transition-all";
+                }
+            });
+
+            // Enable/Disable submit button based on all checks passing
+            const allValid = Object.values(checks).every(Boolean);
+            editSubmit.disabled = !allValid;
+
+            // Optional: Visual feedback for the button
+            if (allValid) {
+                editSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                editSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // --- PASSWORD VISIBILITY LOGIC ---
+
+        // Show password when the user clicks into/focuses the field
+        editPassField.addEventListener('focus', function () {
+            this.type = 'text';
+        });
+
+        // Hide password when the user clicks away
+        editPassField.addEventListener('blur', function () {
+            this.type = 'password';
+        });
+
+        // Run validation on every keystroke
+        editPassField.addEventListener('input', (e) => runValidation(e.target.value));
+
+        // --- EXTERNAL CONTROLS ---
+
+        // Close modal when clicking on the dark backdrop
+        editModal.addEventListener('click', (e) => {
+            if (e.target === editModal) closeEditModal();
+        });
+
+        // Close modal on 'Escape' key press
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (!editModal.classList.contains('hidden')) {
+                    closeEditModal();
+                }
+                if (!deleteModal.classList.contains('hidden')) {
+                    closeDeleteModal();
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Theme Icon
+            const isDark = document.documentElement.classList.contains('dark');
+            if (elements.themeIcon) {
+                elements.themeIcon.className = isDark ? 'fa-solid fa-sun text-lg text-amber-400' : 'fa-solid fa-moon text-brand-600 text-lg';
+            }
+
+            // Toast Dismissal Logic - handled in the first DOMContentLoaded event
+
+            // Clickable Row Logic
+            const rows = document.querySelectorAll('.clickable-row');
+            rows.forEach(row => {
+                row.addEventListener('click', function (e) {
+                    // Check if the user clicked something that should NOT trigger navigation
+                    const isClickableElement = e.target.closest('button') ||
+                        e.target.closest('a') ||
+                        e.target.closest('.action-cell');
+
+                    if (!isClickableElement) {
+                        const url = this.getAttribute('data-href');
+                        if (url) {
+                            window.location.href = url;
+                        }
+                    }
+                });
+            });
+        });
+
+        function displayFileName(input) {
+            const feedback = document.getElementById('file-name-display');
+            const label = document.getElementById('file-label');
+            if (input.files && input.files[0]) {
+                feedback.textContent = "Selected: " + input.files[0].name;
+                feedback.classList.remove('hidden');
+                label.textContent = "File Ready!";
+            }
+        }
+
+        // Function to check for missing mappings on page load
+        function checkMissingMappings() {
+            fetch('/institution/api/get-missing-mappings/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const warningContainer = document.getElementById('missing-mappings-warning');
+
+                    if (data.success && data.missing_classes.length > 0) {
+                        // Force Show
+                        warningContainer.style.setProperty('display', 'block', 'important');
+                        warningContainer.classList.remove('hidden');
+
+                        const names = data.missing_classes.map(cls => cls.name).join(', ');
+                        const p = warningContainer.querySelector('p');
+                        p.innerHTML = `Classes without mappings: <strong>${names}</strong>. Update mappings for proper roll numbers.`;
+                    } else {
+                        // Force Hide
+                        warningContainer.style.setProperty('display', 'none', 'important');
+                        warningContainer.classList.add('hidden');
+                    }
+                })
+                .catch(error => console.error('Error checking mappings:', error));
+        }
+        // Function to show the mapping modal
+        function showMappingModal() {
+    // Remove existing modal if it exists
+    const existingModal = document.getElementById('mapping-modal');
+    if (existingModal) existingModal.remove();
+
+    const modalHTML = `
+    <div id="mapping-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-2xl h-[95vh] sm:h-auto max-h-[95vh] flex flex-col shadow-2xl rounded-t-2xl sm:rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            
+            <div class="px-4 py-4 sm:px-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 z-10">
+                <div>
+                    <h2 class="text-lg sm:text-xl font-bold text-slate-800 dark:text-white">Class Mappings</h2>
+                    <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">Map long names to abbreviations</p>
+                </div>
+                <button onclick="closeMappingModal()" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div class="p-4 sm:p-6 overflow-y-auto flex-grow custom-scrollbar">
+                
+                <div class="mb-6 p-3 sm:p-4 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 flex gap-3">
+                    <i class="fa-solid fa-circle-info text-indigo-600 dark:text-indigo-400 mt-1"></i>
+                    <p class="text-indigo-900 dark:text-indigo-200 text-xs sm:text-sm leading-relaxed">
+                        Keywords are <strong>comma-separated</strong>. e.g., "mca, master of computer".
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-between mb-4 sticky top-0 bg-white dark:bg-slate-900 py-2 z-10">
+                    <h3 class="text-[10px] sm:text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Mapping Rules</h3>
+                    <button type="button" onclick="addMappingRow()" class="inline-flex items-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-md">
+                        <i class="fa-solid fa-plus"></i> Add New
+                    </button>
+                </div>
+
+                <div class="hidden sm:grid grid-cols-12 gap-4 mb-2 px-2 text-[11px] font-bold text-slate-400 uppercase">
+                    <div class="col-span-6">Keywords (Match)</div>
+                    <div class="col-span-5">Abbreviation (Replace)</div>
+                    <div class="col-span-1"></div>
+                </div>
+
+                <div id="mappings-container" class="space-y-4 sm:space-y-3">
+                    </div>
+
+                <div id="empty-state" class="hidden py-12 text-center">
+                    <div class="bg-slate-100 dark:bg-slate-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-layer-group text-slate-400 text-2xl"></i>
+                    </div>
+                    <p class="text-slate-500 dark:text-slate-400">No mappings defined yet.</p>
+                </div>
+            </div>
+
+            <div class="p-4 sm:p-6 border-t border-slate-100 dark:border-slate-800 flex flex-row gap-3 bg-slate-50 dark:bg-slate-800/50">
+                <button onclick="closeMappingModal()" class="flex-1 sm:flex-none px-5 py-3 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold hover:bg-white dark:hover:bg-slate-700 transition-all text-sm">
+                    Cancel
+                </button>
+                <button onclick="saveMappings()" class="flex-1 sm:flex-none sm:px-8 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 transition-all text-sm">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>`;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    loadCurrentMappings();
+}
+
+function addMappingRow(keywords = '', abbreviation = '') {
+    const container = document.getElementById('mappings-container');
+    const emptyState = document.getElementById('empty-state');
+    
+    if (emptyState) emptyState.classList.add('hidden');
+
+    const rowId = 'row-' + Date.now() + Math.random().toString(36).substr(2, 5);
+    
+    // Improved Responsive Row: Stacks on mobile (flex-col), grid on desktop (sm:grid)
+    const rowHTML = `
+    <div id="${rowId}" class="flex flex-col sm:grid sm:grid-cols-12 gap-2 sm:gap-3 p-3 sm:p-2 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 group animate-in slide-in-from-top-2 duration-200 relative">
+        <div class="col-span-6">
+            <label class="block sm:hidden text-[10px] font-bold text-slate-400 uppercase mb-1">Keywords</label>
+            <input type="text" placeholder="mca, master of..." value="${keywords}" 
+                class="mapping-keywords w-full px-3 py-2.5 sm:py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+        </div>
+        <div class="col-span-5">
+            <label class="block sm:hidden text-[10px] font-bold text-slate-400 uppercase mb-1">Abbreviation</label>
+            <input type="text" placeholder="MCA" value="${abbreviation}" 
+                class="mapping-abbr w-full px-3 py-2.5 sm:py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+        </div>
+        <div class="col-span-1 flex justify-end sm:justify-center mt-2 sm:mt-0">
+            <button onclick="document.getElementById('${rowId}').remove(); checkEmptyState();" 
+                class="flex items-center gap-2 sm:block text-red-500 sm:text-slate-400 sm:hover:text-red-500 transition-colors p-2 text-sm sm:text-base">
+                <span class="sm:hidden font-medium text-xs">Remove Mapping</span>
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        </div>
+    </div>`;
+
+    container.insertAdjacentHTML('beforeend', rowHTML);
+}
+
+function checkEmptyState() {
+    const container = document.getElementById('mappings-container');
+    const emptyState = document.getElementById('empty-state');
+    if (container.children.length === 0) {
+        emptyState.classList.remove('hidden');
+    }
+}
+
+        // Function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Function to load current mappings
+        function loadCurrentMappings() {
+            fetch('/institution/api/update-class-mappings/', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('mappings-container');
+                    container.innerHTML = '';
+
+                    if (data.success && data.mappings.length > 0) {
+                        data.mappings.forEach((mapping, index) => {
+                            addMappingRowToContainer(container, index, mapping.keywords, mapping.abbreviation);
+                        });
+                    } else {
+                        // Add a default empty row
+                        addMappingRowToContainer(container, 0, '', '');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading mappings:', error);
+
+                    // Add a default empty row
+                    const container = document.getElementById('mappings-container');
+                    addMappingRowToContainer(container, 0, '', '');
+                });
+        }
+
+        // Function to add a mapping row to the container
+        function addMappingRowToContainer(container, index, keywords = '', abbreviation = '') {
+            const rowHTML = `
+            <div class="mapping-row flex gap-4 mb-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Keywords (comma-separated)</label>
+                    <input type="text" 
+                          class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+                          placeholder="e.g., mca, master of computer application" 
+                          value="${keywords}" 
+                          data-keyword-index="${index}">
+                </div>
+                <div class="w-32">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Abbreviation</label>
+                    <input type="text" 
+                          class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+                          placeholder="e.g., MCA" 
+                          value="${abbreviation}" 
+                          data-abbreviation-index="${index}">
+                </div>
+                <div class="flex items-end">
+                    <button type="button" 
+                            onclick="removeMappingRow(this)" 
+                            class="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>`;
+
+            container.insertAdjacentHTML('beforeend', rowHTML);
+        }
+
+        // Function to add a new mapping row
+        function addMappingRow() {
+            const container = document.getElementById('mappings-container');
+            const index = container.children.length;
+            addMappingRowToContainer(container, index, '', '');
+        }
+
+        // Function to remove a mapping row
+        function removeMappingRow(button) {
+            const row = button.closest('.mapping-row');
+            row.remove();
+
+            // Update indices
+            const rows = document.querySelectorAll('.mapping-row');
+            rows.forEach((row, index) => {
+                const keywordInput = row.querySelector('input[data-keyword-index]');
+                const abbreviationInput = row.querySelector('input[data-abbreviation-index]');
+
+                keywordInput.setAttribute('data-keyword-index', index);
+                abbreviationInput.setAttribute('data-abbreviation-index', index);
+            });
+        }
+
+        // Function to save mappings
+        function saveMappings() {
+            const rows = document.querySelectorAll('.mapping-row');
+            const mappings = [];
+
+            rows.forEach(row => {
+                const keywordInput = row.querySelector('input[data-keyword-index]');
+                const abbreviationInput = row.querySelector('input[data-abbreviation-index]');
+                const keywords = keywordInput.value.trim();
+                const abbreviation = abbreviationInput.value.trim();
+
+                if (keywords && abbreviation) {
+                    mappings.push({ keywords: keywords, abbreviation: abbreviation });
+                }
+            });
+
+            if (mappings.length === 0) {
+                alert('Please add at least one mapping.');
+                return;
+            }
+
+            fetch('/institution/api/update-class-mappings/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ mappings: mappings })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Mappings updated successfully!');
+                        closeMappingModal();
+                        // Force a fresh check of missing mappings
+                        checkMissingMappings();
+                    } else {
+                        alert('Error updating mappings: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving mappings:', error);
+                });
+        }
+
+        // Function to close the mapping modal
+        function closeMappingModal() {
+            const modal = document.getElementById('mapping-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Check for missing mappings when the page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            checkMissingMappings();
+        });
+    </script>
+</body>
+
+</html>

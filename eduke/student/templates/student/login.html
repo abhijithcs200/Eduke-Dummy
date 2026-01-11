@@ -1,0 +1,273 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth overflow-hidden">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gateway | Eduke Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            accent: '#00f2ff'
+                        }
+                    },
+                    animation: {
+                        'gradient-fast': 'gradient-shift 8s ease infinite',
+                        'tilt': 'tilt 10s infinite linear',
+                        'float': 'float 5s ease-in-out infinite',
+                        'pulse-slow': 'pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        'gradient-shift': {
+                            '0%, 100%': { 'background-position': '0% 50%' },
+                            '50%': { 'background-position': '100% 50%' },
+                        },
+                        tilt: {
+                            '0%, 50%, 100%': { transform: 'rotate(0deg)' },
+                            '25%': { transform: 'rotate(0.8deg)' },
+                            '75%': { transform: 'rotate(-0.8deg)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0) scale(1)' },
+                            '50%': { transform: 'translateY(-15px) scale(1.05)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+
+        :root {
+            --bg-light: linear-gradient(-45deg, #f0f2f5, #e0e7ff, #ede9fe, #dcfce7, #f5f3ff);
+            --bg-dark: linear-gradient(-45deg, #050810, #0f172a, #1e1b4b, #020617, #0f172a);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            background: var(--bg-light);
+            background-size: 300% 300%;
+            animation: gradient-shift 12s ease infinite;
+            position: relative;
+        }
+
+        .dark body {
+            background: var(--bg-dark);
+            background-size: 300% 300%;
+        }
+
+        /* Animated Mesh Blobs */
+        .blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.4;
+        }
+
+        .blob-1 { background: #8b5cf6; top: -10%; left: -10%; animation: float 10s infinite; }
+        .blob-2 { background: #00f2ff; bottom: -10%; right: -10%; animation: float 8s infinite reverse; }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .super-glass {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(25px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+        }
+
+        .dark .super-glass {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .error-shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .message-hidden {
+            opacity: 0;
+            transform: translate(-50%, -20px) scale(0.9);
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body class="transition-colors duration-1000 flex items-center justify-center">
+    
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <nav class="fixed top-8 right-8 flex items-center gap-4 z-50">
+        <a href="/" class="super-glass p-4 rounded-2xl hover:scale-110 active:scale-95 transition-all group border-b-2 border-brand-600">
+            <i class="fas fa-house-chimney text-brand-600 text-lg"></i>
+        </a>
+        <button id="theme-toggle" class="super-glass p-4 rounded-2xl hover:scale-110 active:scale-95 transition-all group">
+            <i id="theme-icon" class="fas fa-moon text-slate-600 dark:text-yellow-400 text-lg"></i>
+        </button>
+    </nav>
+
+    <div class="container max-w-6xl z-10 px-6">
+        <div class="grid lg:grid-cols-12 gap-16 items-center">
+            
+            <div class="hidden lg:block lg:col-span-5 space-y-10" data-aos="fade-up">
+                <div class="space-y-6">
+                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/40 dark:bg-brand-600/10 text-brand-600 dark:text-brand-accent border border-brand-600/20 backdrop-blur-md">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-600 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-600"></span>
+                        </span>
+                        <span class="mono text-[10px] font-bold uppercase tracking-[0.2em]">Encrypted_Link_Active</span>
+                    </div>
+                    <h2 class="text-6xl font-black text-slate-800 dark:text-white leading-[1.1] tracking-tighter">
+                        Academic <br><span class="text-brand-600">Intelligence</span> Gateway.
+                    </h2>
+                </div>
+                
+                <div class="grid gap-4">
+                    <div class="super-glass p-6 rounded-[2.5rem] hover:-translate-y-1 transition-all duration-500 group border-l-4 border-brand-600">
+                        <div class="flex gap-5">
+                            <div class="text-brand-600 text-xl pt-1"><i class="fas fa-microchip"></i></div>
+                            <div>
+                                <h4 class="font-extrabold text-slate-800 dark:text-slate-100">Neural Sync</h4>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Login to synchronize your semester progress and AI-generated study paths.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 flex justify-center lg:justify-end">
+                <div class="w-full max-w-[460px] super-glass rounded-[4rem] p-12 lg:p-16 animate-tilt relative group">
+                    
+                    {% if messages %}
+                    <div id="message-container" class="absolute -top-6 left-1/2 -translate-x-1/2 w-[85%] z-50">
+                        {% for message in messages %}
+                        <div class="error-shake bg-red-500 text-white text-[11px] font-bold py-4 px-8 rounded-2xl shadow-2xl shadow-red-500/40 flex items-center gap-4">
+                            <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                <i class="fas fa-exclamation text-[10px]"></i>
+                            </div>
+                            <span>{{ message }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="relative">
+                        <header class="mb-12 text-center lg:text-left">
+                            <div class="w-20 h-20 bg-gradient-to-br from-brand-600 to-brand-500 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-brand-600/40 mb-8 animate-float mx-auto lg:mx-0">
+                                <i class="fas fa-user-shield text-white text-3xl"></i>
+                            </div>
+                            <h3 class="text-4xl font-black dark:text-white tracking-tighter italic uppercase">Sign In</h3>
+                            <p class="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mt-3 mono">Protocol: OAuth 2.5 Secure</p>
+                        </header>
+
+                        <form method="post" class="space-y-6">
+                            {% csrf_token %}
+                            
+                            <div class="relative group">
+                                <input type="text" name="roll_no" required
+                                    class="w-full bg-slate-100/40 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 py-5 px-8 rounded-[2rem] outline-none focus:ring-4 focus:ring-brand-500/20 focus:border-brand-600 transition-all dark:text-white mono text-sm placeholder:text-slate-400"
+                                    placeholder="ROLL NUMBER" value="{{ request.POST.roll_no|default:'' }}">
+                                <i class="fas fa-hashtag absolute right-7 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-700 group-focus-within:text-brand-600 transition-colors"></i>
+                            </div>
+
+                            <div class="relative group">
+                                <input type="password" id="password" name="password" required
+                                    class="w-full bg-slate-100/40 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 py-5 px-8 rounded-[2rem] outline-none focus:ring-4 focus:ring-brand-500/20 focus:border-brand-600 transition-all dark:text-white mono text-sm placeholder:text-slate-400"
+                                    placeholder="PASSWORD">
+                                <button type="button" onclick="togglePassword()" class="absolute right-7 top-1/2 -translate-y-1/2 text-slate-300 hover:text-brand-600 transition-colors">
+                                    <i id="eye-icon" class="fas fa-eye"></i>
+                                </button>
+                            </div>
+
+                            <button type="submit" class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black py-5 rounded-[2rem] transition-all hover:scale-[1.02] hover:shadow-2xl active:scale-95 flex items-center justify-center gap-4 group mt-4">
+                                <span class="tracking-[0.15em] text-xs">INITIATE SESSION</span>
+                                <i class="fas fa-bolt-lightning text-brand-600 group-hover:animate-pulse"></i>
+                            </button>
+                        </form>
+
+                        <footer class="mt-12 text-center">
+                            <a href="{% url 'forgot_password' user_type='student' %}" class="text-[10px] font-bold text-slate-400 hover:text-brand-600 transition-colors uppercase tracking-widest underline decoration-brand-600/30 underline-offset-4">Forgot Access Key?</a>
+                        </footer>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 1200, once: true });
+
+        // Error Message Auto-Fade Logic
+        const msgContainer = document.getElementById('message-container');
+        if (msgContainer) {
+            setTimeout(() => {
+                msgContainer.classList.add('message-hidden');
+                // Remove from DOM after transition
+                setTimeout(() => msgContainer.remove(), 800);
+            }, 4000); // 4 Seconds visibility
+        }
+
+        // Theme Logic
+        const themeBtn = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const html = document.documentElement;
+
+        function updateTheme(isDark) {
+            if (isDark) {
+                html.classList.add('dark');
+                themeIcon.className = 'fas fa-sun text-yellow-400';
+            } else {
+                html.classList.remove('dark');
+                themeIcon.className = 'fas fa-moon text-slate-600';
+            }
+        }
+
+        updateTheme(localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches));
+
+        themeBtn.addEventListener('click', () => {
+            const isDark = !html.classList.contains('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            updateTheme(isDark);
+        });
+
+        function togglePassword() {
+            const passInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eye-icon');
+            const isPass = passInput.type === 'password';
+            passInput.type = isPass ? 'text' : 'password';
+            eyeIcon.className = isPass ? 'fas fa-eye-slash' : 'fas fa-eye';
+        }
+    </script>
+</body>
+</html>

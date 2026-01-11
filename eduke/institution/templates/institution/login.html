@@ -1,0 +1,249 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Institution Login | Eduke Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    <link rel="icon" type="image/png" href="{% static 'images/logobase_white.png' %}">
+    <script>
+        // Immediate Theme Application to prevent "flash" of white
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+        /* The Purple-Violet Mesh Background */
+        .mesh-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-color: #f8fafc;
+            background-image:
+             radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.15) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.1) 0, transparent 50%);
+        }
+        .dark .mesh-bg {
+            background-color: #020617;
+            background-image:
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.2) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(79, 0, 116, 0.25) 0, transparent 50%);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+       .input-field {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border-radius: 0.85rem;
+            border: 2px solid #e2e8f0;
+            background: rgba(255, 255, 255, 0.5);
+            outline: none;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            color: #1e293b;
+        }
+        .dark .input-field {
+            border-color: #1e293b;
+            background: rgba(15, 23, 42, 0.6);
+            color: #f1f5f9;
+        }
+        .input-field:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+            background: white;
+        }
+       .dark .input-field:focus {
+            background: #0f172a;
+            border-color: #a78bfa;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4f0074 0%, #8a2be2 100%);
+            color: white;
+            font-weight: 700;
+            padding: 1rem;
+            border-radius: 0.85rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 15px -3px rgba(79, 0, 116, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(79, 0, 116, 0.3);
+        }
+    </style>
+</head>
+
+<body class="antialiased text-slate-900 dark:text-slate-100 min-h-screen flex items-center justify-center p-4">
+    <div class="mesh-bg"></div>
+    <div class="fixed top-6 right-6 flex items-center gap-3 z-50">
+      <a href="{% url 'index' %}"
+            class="p-4 rounded-2xl glass-panel shadow-lg transition-all hover:scale-110 active:scale-95 group"
+            title="Go to Home">
+          <i
+                class="fas fa-house text-purple-600 dark:text-purple-400 text-xl transition-transform group-hover:-translate-y-0.5"></i>
+        </a>
+        <button id="theme-toggle"
+            class="p-4 rounded-2xl glass-panel shadow-lg transition-all hover:scale-110 active:scale-95 group"
+            title="Toggle Theme">
+            <i id="theme-icon"
+                class="fas fa-moon text-purple-600 dark:text-yellow-400 text-xl transition-transform group-hover:rotate-12"></i>
+        </button>
+    </div>
+
+    <div class="w-full max-w-5xl grid lg:grid-cols-5 glass-panel rounded-[2.5rem] overflow-hidden shadow-2xl min-h-[580px]"
+        data-aos="zoom-in">
+
+        <div
+            class="hidden lg:flex lg:col-span-2 flex-col justify-between p-12 bg-gradient-to-br from-[#1a0027] to-[#4f0074] text-white relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10 pointer-events-none"
+                style="background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');"></div>
+
+            <div class="relative z-10">
+                <a href="{% url 'index' %}">
+                    <img src="{% static 'images/logo_text_long.png' %}" alt="Eduke" class="h-13 transition-all duration-300
+                    grayscale brightness-0 opacity-90
+                    dark:invert dark:brightness-100 dark:opacity-100">
+                </a>
+            </div>
+            <div class="relative z-10">
+                <div class="w-12 h-1.5 bg-purple-400 rounded-full mb-6"></div>
+                <h1 class="text-4xl font-extrabold leading-tight mb-4 tracking-tight">
+                    Master your <br><span class="text-purple-300">academic ecosystem.</span>
+                </h1>
+                <p class="text-purple-100/70 text-sm leading-relaxed max-w-xs font-medium">
+                    Access AI-driven analytics and institutional governance tools in one unified dashboard.
+                </p>
+            </div>
+            <div
+                class="relative z-10 flex items-center gap-3 text-[10px] uppercase tracking-widest font-black text-purple-200/50">
+                <i class="fas fa-shield-halved text-lg"></i>
+                <span>Enterprise Grade Security</span>
+            </div>
+        </div>
+        <div class="lg:col-span-3 p-8 lg:p-16 flex flex-col justify-center bg-white/40 dark:bg-slate-900/0 relative">
+            {% if messages %}
+            <div class="absolute top-3 left-8 right-8 space-y-2">
+                {% for message in messages %}
+                <div
+                    class="p-4 rounded-2xl {% if message.tags == 'error' %}bg-red-500/10 text-red-600 border-red-500/20{% else %}bg-emerald-500/10 text-emerald-600 border-emerald-500/20{% endif %} border text-xs font-bold flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+                    <i class="fas fa-circle-info"></i> {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div id="login-container">
+                <div class="mb-10">
+                  <h2 class="text-4xl font-black mb-2 tracking-tight text-slate-500 dark:text-slate-400">Portal Login
+                    </h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Enter your administrative
+                        credentials to continue.</p>
+                </div>
+                <form method="POST" action="{% url 'institution:login' %}" class="space-y-6">
+                    {% csrf_token %}
+                    <div class="group">
+                        <label
+                            class="block text-[10px] font-black uppercase tracking-[0.2em] mb-2.5 ml-1 text-slate-400 dark:text-slate-500 transition-colors group-focus-within:text-purple-500">
+                            Administrator Email
+                        </label>
+                        <div class="relative">
+                            <i
+                                class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="email" name="email" placeholder="admin@university.edu"
+                            class="input-field pl-11" required>
+                        </div>
+                    </div>
+                    <div class="group">
+                        <div class="flex justify-between items-center mb-2.5 ml-1">
+                            <label
+                                class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 transition-colors group-focus-within:text-purple-500">
+                                Security Password
+                            </label>
+
+                            <a href="{% url 'forgot_password' user_type='institution' %}"
+                                class="text-[10px] font-extrabold text-purple-600 dark:text-purple-400 hover:underline uppercase tracking-tighter">Forgot?</a>
+
+                        </div>
+                        <div class="relative">
+                            <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="password" id="password" name="password" placeholder="••••••••"
+                                class="input-field pl-11" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary w-full text-lg mt-4 group">
+                        Secure Sign In
+                        <i class="fas fa-arrow-right text-sm transition-transform group-hover:translate-x-1"></i>
+                    </button>
+                </form>
+                <div class="mt-12 text-center pt-8 border-t border-slate-200 dark:border-slate-800">
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
+                        New institution?
+                        <a href="{% url 'institution:register' %}"
+                            class="text-purple-600 dark:text-purple-400 font-black hover:underline ml-1">Apply for
+                            Access</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true });
+
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const html = document.documentElement;
+
+        // Logic to update the icon based on current mode
+        function updateIcon() {
+            if (html.classList.contains('dark')) {
+                themeIcon.classList.replace('fa-moon', 'fa-sun');
+            } else {
+                themeIcon.classList.replace('fa-sun', 'fa-moon');
+            }
+        }
+
+        // Initialize icon on load
+        updateIcon();
+        themeToggle.addEventListener('click', () => {
+            // Toggle class
+
+            html.classList.toggle('dark');
+
+            // Persist preference
+            if (html.classList.contains('dark')) {
+                localStorage.theme = 'dark';
+            } else {
+                localStorage.theme = 'light';
+            }
+            // Update Icon
+            updateIcon();
+        });
+    </script>
+</body>
+</html

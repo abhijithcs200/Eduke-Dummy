@@ -1,0 +1,726 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eduke | Ultra Premium Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="icon" type="image/png" href="{% static 'images/logobase_white.png' %}">
+  <script>
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd', 400: '#a78bfa',
+              500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9', 800: '#5b21b6', 900: '#4c1d95',
+            },
+            accent: { fuchsia: '#d946ef', indigo: '#6366f1', rose: '#f43f5e', amber: '#f59e0b' }
+          },
+          borderRadius: { '4xl': '2rem', '5xl': '3rem', '6xl': '4rem' }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+    html,
+    body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      position: fixed;
+      /* Lock viewport on mobile */
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      letter-spacing: -0.01em;
+      background-color: #f8fafc;
+    }
+
+    .dark body {
+      background-color: #020617;
+    }
+
+    /* Cursor Spotlight Effect */
+    #spotlight {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: radial-gradient(circle at var(--x) var(--y), rgba(139, 92, 246, 0.12) 0%, transparent 40%);
+      z-index: 1;
+    }
+
+    /* Floating Orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: 0;
+      opacity: 0.4;
+      animation: float 20s infinite alternate;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translate(0, 0);
+      }
+
+      100% {
+        transform: translate(80px, 40px);
+      }
+    }
+
+    /* Ultra Glassmorphism */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .dark .glass-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Sidebar logic: Needs to stay dark even in light mode for "Premium" feel */
+    .glass-sidebar {
+      background: rgba(10, 10, 20, 0.95);
+      backdrop-filter: blur(30px);
+      border-right: 1px solid rgba(139, 92, 246, 0.1);
+    }
+
+    /* Active Nav Styling */
+    .nav-item {
+      position: relative;
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .nav-item.active {
+      color: #a78bfa !important;
+      background: linear-gradient(90deg, rgba(139, 92, 246, 0.15) 0%, transparent 100%);
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 25%;
+      height: 50%;
+      width: 4px;
+      background: #d946ef;
+      box-shadow: 0 0 15px #d946ef;
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* Card Tilt Effect */
+    .tilt-card {
+      transition: transform 0.1s ease-out;
+      transform-style: preserve-3d;
+    }
+
+    .tilt-card>* {
+      transform: translateZ(20px);
+    }
+
+    /* Animated Text */
+    .text-gradient {
+      background: linear-gradient(to right, #8b5cf6, #d946ef, #6366f1);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-size: 200% auto;
+      animation: shine 5s linear infinite;
+    }
+
+    @keyframes shine {
+      to {
+        background-position: 200% center;
+      }
+    }
+
+    @keyframes scan {
+      from {
+        transform: translateY(0);
+      }
+
+      to {
+        transform: translateY(40px);
+      }
+    }
+
+    @keyframes shimmer {
+      100% {
+        left: 100%;
+      }
+    }
+
+    .animate-scan {
+      animation: scan 3s linear infinite;
+    }
+
+    .animate-shimmer {
+      animation: shimmer 2s infinite;
+    }
+
+    /* Custom Scroll */
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #8b5cf633;
+      border-radius: 10px;
+    }
+
+  </style>
+</head>
+
+<body class="antialiased">
+  <div id="spotlight"></div>
+  <div class="orb w-96 h-96 bg-brand-500 top-[-10%] left-[-10%]"></div>
+  <div class="orb w-80 h-80 bg-accent-indigo bottom-[10%] right-[5%]"></div>
+
+  <div class="relative z-10 flex h-[100dvh] w-full p-0 lg:p-6 gap-0 lg:gap-6 overflow-hidden">
+
+    <aside id="sidebar"
+      class="fixed inset-y-0 left-0 z-50 w-72 transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-500 ease-in-out h-[100dvh] lg:h-full">
+
+      <div
+        class="flex flex-col h-full glass-sidebar lg:rounded-[3rem] shadow-2xl overflow-hidden border-r border-white/5 bg-[#0a0a14]/80 backdrop-blur-xl">
+
+        <div class="p-8 pb-4 shrink-0 flex items-center justify-between">
+          <div class="flex items-center gap-3 group cursor-pointer">
+            <div
+              class="w-10 h-10 rounded-xl flex items-center justify-center border border-slate-200 dark:border-white/10 bg-white/10 dark:bg-white/5 group-hover:rotate-12 transition-transform animate-pulse bg-gradient-to-r from-brand-500 via-accent-fuchsia to-indigo-500 bg-[length:200%_200%]">
+              <img src="{% static 'images/logobase_white.png' %}" alt="Eduke Logo" class="w-6 h-6 object-contain animate-color-cycle">
+            </div>
+            <div>
+              <h2 class="text-xl font-black tracking-tighter text-white uppercase text-nowrap">
+                Eduke<span class="text-accent-fuchsia">.</span>
+              </h2>
+              <p class="text-[8px] font-black text-brand-400 uppercase tracking-[0.3em]">Portal</p>
+            </div>
+          </div>
+
+          <button id="close-sidebar"
+            class="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 text-slate-400 hover:text-white transition-all">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+
+        <nav class="flex-grow px-4 space-y-4 overflow-y-auto custom-scroll py-2">
+
+          <div>
+            <p class="px-6 text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">Command</p>
+            <div class="space-y-1">
+
+              <a href="{% url 'institution:dashboard' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'dashboard' %} 
+                            bg-brand-500/10 border border-brand-500/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                {% if request.resolver_match.url_name == 'dashboard' %}
+                <span class="absolute left-2 w-1 h-4 bg-brand-500 rounded-full shadow-[0_0_10px_#8b5cf6]"></span>
+                {% endif %}
+
+                <i
+                  class="fa-solid fa-layer-group text-base {% if request.resolver_match.url_name == 'dashboard' %} text-brand-400 {% else %} group-hover:text-brand-400 {% endif %}"></i>
+                <span class="font-bold text-sm">Dashboard</span>
+              </a>
+
+              <a href="{% url 'institution:manage_student' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'manage_student' %} 
+                            bg-accent-fuchsia/10 border border-accent-fuchsia/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                {% if request.resolver_match.url_name == 'manage_student' %}
+                <span class="absolute left-2 w-1 h-4 bg-accent-fuchsia rounded-full shadow-[0_0_10px_#d946ef]"></span>
+                {% endif %}
+
+                <i
+                  class="fa-solid fa-user-shield text-base {% if request.resolver_match.url_name == 'manage_student' %} text-accent-fuchsia {% else %} group-hover:text-accent-fuchsia {% endif %}"></i>
+                <span class="font-bold text-sm">Students</span>
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <p class="px-6 text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">Operations
+            </p>
+            <div class="space-y-1">
+
+              <a href="{% url 'institution:classes' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'classes' %} 
+                            bg-indigo-500/10 border border-indigo-500/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                {% if request.resolver_match.url_name == 'classes' %}
+                <span class="absolute left-2 w-1 h-4 bg-indigo-500 rounded-full shadow-[0_0_10px_#6366f1]"></span>
+                {% endif %}
+
+                <i
+                  class="fa-solid fa-chalkboard-user text-base {% if request.resolver_match.url_name == 'classes' %} text-indigo-400 {% else %} group-hover:text-indigo-400 {% endif %}"></i>
+                <span class="font-bold text-sm">Manage Classes</span>
+              </a>
+
+              <a href="{% url 'institution:subjects' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'subjects' %} 
+                            bg-emerald-500/10 border border-emerald-500/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                {% if request.resolver_match.url_name == 'subjects' %}
+                <span class="absolute left-2 w-1 h-4 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]"></span>
+                {% endif %}
+
+                <i
+                  class="fa-solid fa-book-open-reader text-base {% if request.resolver_match.url_name == 'subjects' %} text-emerald-400 {% else %} group-hover:text-emerald-400 {% endif %}"></i>
+                <span class="font-bold text-sm">Subject Head</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <p class="px-6 text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">User</p>
+            <div class="space-y-1">
+              <a href="{% url 'institution:profile' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'profile' %} 
+                            bg-brand-500/10 border border-brand-500/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                {% if request.resolver_match.url_name == 'profile' %}
+                <span class="absolute left-2 w-1 h-4 bg-brand-500 rounded-full shadow-[0_0_10px_#8b5cf6]"></span>
+                {% endif %}
+
+                <i
+                  class="fa-solid fa-circle-user text-base {% if request.resolver_match.url_name == 'profile' %} text-brand-400 {% else %} group-hover:text-brand-400 {% endif %}"></i>
+                <span class="font-bold text-sm">{{ institution.abbreviation|default:"User" }}
+                  Profile</span>
+              </a>
+            </div>
+          </div>
+        </nav>
+
+        <div class="p-4 shrink-0 mt-auto lg:mb-4">
+          <div
+            class="relative overflow-hidden group bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-4 flex flex-col gap-3 transition-all hover:border-white/20">
+            <div class="flex items-center gap-3">
+              <div class="relative flex-shrink-0">
+                <div
+                  class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center border border-white/20 shadow-lg">
+                  <span class="text-[11px] font-black text-white uppercase">
+                    {{ institution.abbreviation|default:"EDU" }}</span>
+                </div>
+                <div
+                  class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-[#0a0a14] rounded-full">
+                </div>
+              </div>
+              <div class="min-w-0 flex-1">
+                <h4 class="text-[11px] font-black text-white truncate tracking-tight mb-0.5">
+                  {{ institution.name|default:"Main Campus" }}
+                </h4>
+                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none">
+                  Admin</p>
+              </div>
+            </div>
+
+            <div class="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+            <a href="{% url 'logout' %}"
+              class="group/btn relative flex items-center justify-between px-4 py-2.5 rounded-xl bg-rose-500/5 hover:bg-rose-500 border border-rose-500/20 hover:border-rose-500 transition-all duration-300">
+              <span
+                class="text-[9px] font-black uppercase tracking-widest text-rose-400 group-hover/btn:text-white">Logout</span>
+              <i
+                class="fa-solid fa-power-off text-[10px] text-rose-500 group-hover/btn:text-white transition-colors"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+
+    <main class="flex-1 flex flex-col min-w-8">
+
+      <header class="h-24 flex items-center justify-between px-8 bg-transparent relative z-10">
+        <div class="flex items-center gap-6">
+          <button id="menu-btn"
+            class="lg:hidden w-12 h-12 flex items-center justify-center rounded-2xl glass-card text-brand-600">
+            <i class="fa-solid fa-bars-staggered"></i>
+          </button>
+          <div>
+            <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">System <span
+                class="text-gradient">Integrity</span></h1>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="hidden sm:flex px-5 py-2.5 rounded-2xl glass-card items-center gap-3">
+            <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span class="text-[10px] font-black uppercase text-slate-500 dark:text-slate-300 tracking-widest">Active
+              System</span>
+          </div>
+          <button id="theme-switch"
+            class="w-12 h-12 rounded-2xl glass-card flex items-center justify-center hover:scale-110 transition-transform">
+            <i id="theme-icon" class="fa-solid fa-moon text-brand-600 text-lg"></i>
+          </button>
+        </div>
+      </header>
+
+      <div class="flex-1 overflow-y-auto px-8 pb-10 custom-scroll space-y-8 relative z-20">
+
+        <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 relative pt-2">
+          <div class="tilt-card glass-card p-8 rounded-[3.5rem] group hover:border-brand-500/50 transition-colors">
+            <div
+              class="w-14 h-14 bg-brand-500/10 text-brand-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand-500 group-hover:text-white transition-all duration-500">
+              <i class="fa-solid fa-user-graduate text-xl"></i>
+            </div>
+            <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Students</p>
+            <h3 class="text-4xl font-black tracking-tighter dark:text-white">{{ total_students }}</h3>
+          </div>
+
+          <div class="tilt-card glass-card p-8 rounded-[3.5rem] group hover:border-fuchsia-500/50 transition-colors">
+            <div
+              class="w-14 h-14 bg-fuchsia-500/10 text-fuchsia-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-fuchsia-500 group-hover:text-white transition-all duration-500">
+              <i class="fa-solid fa-chalkboard-user text-xl"></i>
+            </div>
+            <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Classes</p>
+            <h3 class="text-4xl font-black tracking-tighter dark:text-white">{{ total_classes }}</h3>
+          </div>
+
+          <div class="tilt-card glass-card p-8 rounded-[3.5rem] group hover:border-indigo-500/50 transition-colors">
+            <div
+              class="w-14 h-14 bg-indigo-500/10 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-500">
+              <i class="fa-solid fa-book-open text-xl"></i>
+            </div>
+            <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Subjects</p>
+            <h3 class="text-4xl font-black tracking-tighter dark:text-white">48</h3>
+          </div>
+
+          <div class="tilt-card glass-card p-8 rounded-[3.5rem] group hover:border-amber-500/50 transition-colors">
+            <div
+              class="w-14 h-14 bg-amber-500/10 text-amber-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-amber-500 group-hover:text-white transition-all duration-500">
+              <i class="fa-solid fa-chart-pie text-xl"></i>
+            </div>
+            <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Monthly Reports</p>
+            <h3 class="text-4xl font-black tracking-tighter dark:text-white">2,150</h3>
+          </div>
+        </section>
+
+        <section
+          class="relative group mx-auto max-w-6xl rounded-2xl md:rounded-[3rem] overflow-hidden bg-[#020617] border border-white/10 shadow-2xl h-[380px] sm:h-[420px] md:h-[500px] transition-all duration-500">
+
+          <div class="absolute inset-0 z-0 opacity-20 pointer-events-none">
+            <div
+              class="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:35px_35px] animate-scan">
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-[#020617]"></div>
+          </div>
+
+          <div
+            class="absolute -inset-[10px] bg-gradient-to-r from-fuchsia-600 to-indigo-500 opacity-0 group-hover:opacity-25 blur-3xl transition-opacity duration-700 pointer-events-none">
+          </div>
+
+          <div class="relative z-10 h-full flex flex-col justify-center px-6 sm:px-12 md:px-20">
+
+            <div
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 backdrop-blur-md mb-6 w-fit transform group-hover:translate-x-1 transition-transform duration-500">
+              <span class="flex h-1.5 w-1.5 relative">
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-fuchsia-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-fuchsia-500"></span>
+              </span>
+              <span class="text-[9px] sm:text-[10px] font-black tracking-[0.2em] text-fuchsia-200 uppercase">System
+                Intelligence Active</span>
+            </div>
+
+            <div class="mb-8">
+              <h2
+                class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tighter leading-[1.1]">
+                Command with <br class="hidden sm:block">
+                <span
+                  class="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 via-indigo-300 to-cyan-400">
+                  Unrivaled Vision.
+                </span>
+              </h2>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 relative z-20">
+              <button
+                class="relative overflow-hidden px-6 py-3.5 sm:px-8 sm:py-4 bg-indigo-600 rounded-xl font-black text-[10px] md:text-[11px] uppercase tracking-widest text-white transition-all hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] hover:-translate-y-0.5 active:translate-y-0 active:scale-95 group/btn">
+                <span class="relative z-10">Perform System Audit</span>
+                <div
+                  class="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[25deg] group-hover:left-[100%] transition-all duration-1000">
+                </div>
+              </button>
+
+              <a href="#"
+                class="group/btn2 relative px-6 py-3.5 sm:px-8 sm:py-4 rounded-xl font-black text-[10px] md:text-[11px] uppercase tracking-widest text-white overflow-hidden transition-all border border-white/10 hover:border-fuchsia-500/50 hover:bg-white/5">
+                <span class="relative z-10">Access Logs</span>
+              </a>
+            </div>
+
+          </div>
+        </section>
+
+
+
+
+
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-10">
+          <div class="lg:col-span-8 p-1 relative">
+            <div class="flex items-center justify-between mb-8 px-4">
+              <div>
+                <h4 class="text-3xl font-black tracking-tighter text-slate-800 dark:text-white">Rapid Control</h4>
+                <p class="text-sm text-slate-500 font-medium">Quick access to core modules</p>
+              </div>
+              <div
+                class="h-10 w-10 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center border border-slate-200 dark:border-white/10">
+                <i class="fa-solid fa-bolt-lightning text-brand-600 animate-pulse"></i>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-12 gap-4">
+
+              <a href="{% url 'institution:manage_student' %}"
+                class="group relative col-span-12 sm:col-span-7 overflow-hidden rounded-[2.5rem] bg-white dark:bg-white/5 p-8 transition-all duration-500 hover:shadow-2xl hover:shadow-brand-500/20 border border-slate-200/50 dark:border-white/10">
+                <div
+                  class="absolute inset-0 bg-gradient-to-br from-brand-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                </div>
+                <div class="relative z-10 flex items-center gap-6">
+                  <div
+                    class="w-16 h-16 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-600/30 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500">
+                    <i class="fa-solid fa-user-plus text-2xl text-white"></i>
+                  </div>
+                  <div class="text-left">
+                    <span class="block text-[10px] font-black uppercase tracking-[0.2em] text-brand-600 mb-1">Quick
+                      Action</span>
+                    <h5 class="text-xl font-bold text-slate-800 dark:text-white">Enroll Student</h5>
+                  </div>
+                </div>
+                <i
+                  class="fa-solid fa-arrow-right absolute right-8 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-brand-600 group-hover:translate-x-2 transition-all"></i>
+              </a>
+
+              <a href="{% url 'institution:classes' %}"
+                class="group col-span-6 sm:col-span-5 rounded-[2.5rem] bg-fuchsia-50 dark:bg-fuchsia-500/5 p-8 transition-all duration-500 hover:bg-fuchsia-600 border border-fuchsia-100 dark:border-fuchsia-500/10">
+                <div class="flex flex-col items-center gap-4">
+                  <div
+                    class="w-14 h-14 rounded-full bg-white dark:bg-white/10 flex items-center justify-center shadow-sm group-hover:rotate-[15deg] transition-transform">
+                    <i class="fa-solid fa-chalkboard-user text-xl text-fuchsia-600 group-hover:text-fuchsia-200"></i>
+                  </div>
+                  <span
+                    class="text-[11px] font-black uppercase tracking-widest text-fuchsia-800 dark:text-fuchsia-400 group-hover:text-white">Classes</span>
+                </div>
+              </a>
+
+              <a href="{% url 'institution:profile' %}"
+                class="group col-span-6 sm:col-span-5 rounded-[2.5rem] bg-indigo-50 dark:bg-indigo-500/5 p-8 transition-all duration-500 hover:bg-indigo-600 border border-indigo-100 dark:border-indigo-500/10">
+                <div class="flex flex-col items-center gap-4">
+                  <div
+                    class="relative w-14 h-14 rounded-2xl bg-white dark:bg-white/10 flex items-center justify-center shadow-sm transition-all group-hover:-translate-y-2">
+                    <i class="fa-solid fa-building-columns text-xl text-indigo-600 group-hover:text-indigo-200"></i>
+                  </div>
+                  <span
+                    class="text-[11px] font-black uppercase tracking-widest text-indigo-800 dark:text-indigo-400 group-hover:text-white">Profile</span>
+                </div>
+              </a>
+
+              <a href="{% url 'institution:security_checkup' %}"
+                class="group relative col-span-12 sm:col-span-7 overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 transition-all duration-500 hover:ring-4 hover:ring-white/10">
+
+                <div
+                  class="absolute inset-0 opacity-10 [background-image:linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] [background-size:24px_24px]">
+                </div>
+
+                <div class="relative z-10 flex items-center justify-between">
+                  <div class="flex items-center gap-5">
+                    <div class="relative">
+                      <div
+                        class="absolute inset-0 bg-green-500/20 blur-xl rounded-full scale-0 group-hover:scale-150 transition-transform duration-700">
+                      </div>
+                      <div
+                        class="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 group-hover:border-green-400 group-hover:bg-green-400/10 transition-all duration-500">
+                        <i class="fa-solid fa-fingerprint text-2xl text-white group-hover:text-green-400"></i>
+                      </div>
+                    </div>
+
+                    <div class="text-left">
+                      <h5 class="text-xl font-bold text-white tracking-tight">Security Hub</h5>
+                      <div class="flex items-center gap-2">
+                        <span class="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <p class="text-[10px] text-green-400/80 font-black uppercase tracking-widest">Protocol 09-X
+                          Active</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-4">
+                    <div class="hidden lg:flex flex-col items-end">
+                      <span class="text-[10px] font-black text-slate-500 uppercase">Integrity</span>
+                      <span class="text-sm font-mono text-green-400">99.9%</span>
+                    </div>
+
+                    <div class="relative w-12 h-12 flex items-center justify-center">
+                      <svg class="absolute inset-0 w-full h-full -rotate-90">
+                        <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="3" fill="transparent"
+                          class="text-slate-800" />
+                        <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="3" fill="transparent"
+                          class="text-green-500 transition-all duration-1000" stroke-dasharray="125"
+                          stroke-dashoffset="25" />
+                      </svg>
+                      <i
+                        class="fa-solid fa-shield-halved text-[10px] text-white/50 group-hover:text-green-400 transition-colors"></i>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="absolute bottom-0 left-0 w-full h-1 bg-slate-800">
+                  <div class="h-full bg-green-500 w-0 group-hover:w-full transition-all duration-700 delay-100"></div>
+                </div>
+              </a>
+
+            </div>
+          </div>
+
+          <div
+            class="lg:col-span-4 group relative overflow-hidden rounded-[4rem] bg-gradient-to-br from-brand-700 via-brand-800 to-indigo-950 p-10 text-white shadow-2xl transition-all duration-500 hover:shadow-brand-500/20">
+
+            <div
+              class="absolute -top-10 -right-10 h-64 w-64 rounded-full bg-brand-400/20 blur-[80px] transition-all duration-700 group-hover:bg-brand-400/40">
+            </div>
+            <div class="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-indigo-500/20 blur-[80px]"></div>
+
+            <div class="relative z-10 flex h-full flex-col justify-between">
+              <div>
+                <div
+                  class="mb-6 flex items-center gap-2 w-fit rounded-full bg-white/10 px-3 py-1 backdrop-blur-md border border-white/10">
+                  <span class="relative flex h-2 w-2">
+                    <span
+                      class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  </span>
+                  <span class="text-[10px] font-bold uppercase tracking-widest text-white/90">Live Concierge</span>
+                </div>
+
+                <h4 class="mb-3 text-3xl font-black tracking-tight">Support <span class="text-brand-300">Hub</span></h4>
+                <p class="text-sm font-medium leading-relaxed text-indigo-100/70">
+                  Access 24/7 priority assistance. Our elite concierge team is ready to resolve your inquiries in
+                  real-time.
+                </p>
+              </div>
+
+              <div class="mt-8 space-y-4">
+                <button
+                  class="relative w-full overflow-hidden rounded-2xl bg-white px-6 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-brand-900 transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-lg">
+                  <span class="relative z-10 flex items-center justify-center gap-2">
+                    Open Direct Ticket
+                    <i class="fa-solid fa-arrow-right-long transition-transform group-hover:translate-x-1"></i>
+                  </span>
+                </button>
+
+                <p class="text-center text-[9px] font-bold uppercase tracking-widest text-white/40">
+                  Avg. response time: <span class="text-white/80">~4 mins</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const spotlight = document.getElementById('spotlight');
+    const menuBtn = document.getElementById('menu-btn');
+    const sidebar = document.getElementById('sidebar');
+    const themeSwitch = document.getElementById('theme-switch');
+    const themeIcon = document.getElementById('theme-icon');
+
+    // Cursor Effect
+    window.addEventListener('mousemove', e => {
+      spotlight.style.setProperty('--x', `${e.clientX}px`);
+      spotlight.style.setProperty('--y', `${e.clientY}px`);
+    });
+
+    // 3D Tilt Effect
+    const tiltCards = document.querySelectorAll('.tilt-card');
+    tiltCards.forEach(card => {
+      card.addEventListener('mousemove', e => {
+        if (window.innerWidth < 1024) return;
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const rotateX = (y - rect.height / 2) / 10;
+        const rotateY = (rect.width / 2 - x) / 10;
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)`;
+      });
+    });
+
+    // Theme logic
+    function updateIcon() {
+      const isDark = document.documentElement.classList.contains('dark');
+      themeIcon.className = isDark ? 'fa-solid fa-sun text-lg text-yellow-400' : 'fa-solid fa-moon text-lg text-brand-600';
+    }
+    updateIcon();
+
+    themeSwitch.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      updateIcon();
+    });
+
+    // Mobile Sidebar
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sidebar.classList.toggle('-translate-x-full');
+    });
+
+    const closeSidebarBtn = document.getElementById('close-sidebar');
+    if (closeSidebarBtn) {
+      closeSidebarBtn.addEventListener('click', () => {
+        sidebar.classList.add('-translate-x-full');
+      });
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && window.innerWidth < 1024) {
+        sidebar.classList.add('-translate-x-full');
+      }
+    });
+
+  </script>
+</body>
+
+</html>

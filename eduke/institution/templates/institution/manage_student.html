@@ -1,0 +1,1663 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eduke | Student Infrastructure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{% static 'images/logobase_white.png' %}">
+
+    <script>
+        // Initial Theme Check
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd', 400: '#a78bfa',
+                            500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9', 800: '#5b21b6', 900: '#4c1d95',
+                        },
+                        accent: { fuchsia: '#d946ef', indigo: '#6366f1', rose: '#f43f5e', amber: '#f59e0b', emerald: '#10b981' }
+                    },
+                    animation: { 'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite' }
+                }
+            }
+        }
+
+        // 14. Form Validation Before Submit
+        document.getElementById('edit-form')?.addEventListener('submit', function (e) {
+            const password = document.getElementById('edit-password').value;
+
+            // If empty, allow submit (keeping current password)
+            if (password === '') return true;
+
+            // Validate password if provided
+            const isValid = password.length >= 6 &&
+                /[A-Z]/.test(password) &&
+                /[a-z]/.test(password) &&
+                /[0-9]/.test(password) &&
+                /[!@#$%^&*]/.test(password);
+
+            if (!isValid) {
+                e.preventDefault();
+                alert('❌ New password does not meet requirements!');
+                return false;
+            }
+        });
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        .dark body {
+            background-color: #020617;
+        }
+
+        ::-webkit-scrollbar {
+            width: 0px;
+            height: 0px;
+        }
+
+        #spotlight {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at var(--x) var(--y), rgba(139, 92, 246, 0.12) 0%, transparent 35%);
+            z-index: 1;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .manual-input input,
+        .manual-input select {
+            width: 100%;
+            padding: 0.875rem 1.25rem;
+            border-radius: 1rem;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e293b;
+            transition: all 0.3s ease;
+        }
+
+        .dark .manual-input input,
+        .dark .manual-input select,
+        .dark #directory-search,
+        .dark #class-filter {
+            background: rgba(30, 41, 59, 0.5);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #f8fafc !important;
+        }
+
+        .data-table-row {
+            transition: all 0.2s ease;
+        }
+
+        .empty-state-hidden {
+            display: none !important;
+        }
+
+        .data-table-row {
+            transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: rowSlideIn 0.5s ease-out forwards;
+        }
+
+        @keyframes rowSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .overflow-x-hidden {
+            scrollbar-width: none;
+        }
+
+        .overflow-x-hidden::-webkit-scrollbar {
+            display: none;
+        }
+
+        @media (max-width: 1023px) {
+            #student-table thead {
+                display: none;
+            }
+
+            #student-body {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .data-table-row {
+                display: block;
+                border: 1px solid rgba(226, 232, 240, 0.8);
+                border-radius: 1.5rem;
+                background: white !important;
+                padding: 1.25rem;
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+            }
+
+            .dark .data-table-row {
+                background: rgba(15, 23, 42, 0.6) !important;
+                border-color: rgba(255, 255, 255, 0.05);
+            }
+
+            .data-table-row td {
+                display: block;
+                padding: 0.4rem 0 !important;
+                text-align: left !important;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .mobile-group-box {
+                /* This ensures the label is on the left and the value is on the right */
+                width: 100%;
+                background: rgba(255, 255, 255, 0.2);
+            }
+
+            /* Dark mode adjustment for mobile boxes */
+            .dark .mobile-group-box {
+                background: rgba(15, 23, 42, 0.2);
+            }
+        }
+    </style>
+</head>
+
+<body class="antialiased">
+    <div id="spotlight"></div>
+
+
+    <div class="relative z-10 flex h-screen p-0 lg:p-6 gap-0 lg:gap-6 overflow-hidden">
+
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-50 w-72 transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-500 ease-in-out h-[100dvh] lg:h-full">
+
+            <div
+                class="flex flex-col h-full glass-sidebar lg:rounded-[3rem] shadow-2xl overflow-hidden border-r border-white/5 bg-[#0a0a14]/80 backdrop-blur-xl">
+
+                <div class="p-8 pb-4 shrink-0 flex items-center justify-between">
+          <div class="flex items-center gap-3 group cursor-pointer">
+            <div
+              class="w-10 h-10 rounded-xl flex items-center justify-center border border-slate-200 dark:border-white/10 bg-white/10 dark:bg-white/5 group-hover:rotate-12 transition-transform animate-pulse bg-gradient-to-r from-brand-500 via-accent-fuchsia to-indigo-500 bg-[length:200%_200%]">
+              <img src="{% static 'images/logobase_white.png' %}" alt="Eduke Logo" class="w-6 h-6 object-contain animate-color-cycle">
+            </div>
+            <div>
+              <h2 class="text-xl font-black tracking-tighter text-white uppercase text-nowrap">
+                Eduke<span class="text-accent-fuchsia">.</span>
+              </h2>
+              <p class="text-[8px] font-black text-brand-400 uppercase tracking-[0.3em]">Portal</p>
+            </div>
+          </div>
+
+          <button id="close-sidebar"
+            class="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 text-slate-400 hover:text-white transition-all">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+
+
+                <nav class="flex-grow px-4 space-y-4 overflow-y-auto custom-scroll py-2">
+
+                    <div>
+                        <p class="px-6 text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">Command</p>
+                        <div class="space-y-1">
+
+                            <a href="{% url 'institution:dashboard' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'dashboard' %} 
+                            bg-brand-500/10 border border-brand-500/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                                {% if request.resolver_match.url_name == 'dashboard' %}
+                                <span
+                                    class="absolute left-2 w-1 h-4 bg-brand-500 rounded-full shadow-[0_0_10px_#8b5cf6]"></span>
+                                {% endif %}
+
+                                <i
+                                    class="fa-solid fa-layer-group text-base {% if request.resolver_match.url_name == 'dashboard' %} text-brand-400 {% else %} group-hover:text-brand-400 {% endif %}"></i>
+                                <span class="font-bold text-sm">Dashboard</span>
+                            </a>
+
+                            <a href="{% url 'institution:manage_student' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'manage_student' %} 
+                            bg-accent-fuchsia/10 border border-accent-fuchsia/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                                {% if request.resolver_match.url_name == 'manage_student' %}
+                                <span
+                                    class="absolute left-2 w-1 h-4 bg-accent-fuchsia rounded-full shadow-[0_0_10px_#d946ef]"></span>
+                                {% endif %}
+
+                                <i
+                                    class="fa-solid fa-user-shield text-base {% if request.resolver_match.url_name == 'manage_student' %} text-accent-fuchsia {% else %} group-hover:text-accent-fuchsia {% endif %}"></i>
+                                <span class="font-bold text-sm">Students</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="px-6 text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">Operations
+                        </p>
+                        <div class="space-y-1">
+
+                            <a href="{% url 'institution:classes' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'classes' %} 
+                            bg-brand-500/10 border border-brand-500/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                                {% if request.resolver_match.url_name == 'classes' %}
+                                <span
+                                    class="absolute left-2 w-1 h-4 bg-brand-500 rounded-full shadow-[0_0_10px_#8b5cf6]"></span>
+                                {% endif %}
+
+                                <i
+                                    class="fa-solid fa-chalkboard-user text-base {% if request.resolver_match.url_name == 'classes' %} text-brand-400 {% else %} group-hover:text-brand-400 {% endif %}"></i>
+                                <span class="font-bold text-sm">Manage Classes</span>
+                            </a>
+
+                            <a href="{% url 'institution:subjects' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'subjects' %} 
+                            bg-emerald-500/10 border border-emerald-500/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                                {% if request.resolver_match.url_name == 'subjects' %}
+                                <span
+                                    class="absolute left-2 w-1 h-4 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]"></span>
+                                {% endif %}
+
+                                <i
+                                    class="fa-solid fa-book-open-reader text-base {% if request.resolver_match.url_name == 'subjects' %} text-emerald-400 {% else %} group-hover:text-emerald-400 {% endif %}"></i>
+                                <span class="font-bold text-sm">Subject Head</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <p class="px-6 text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">User</p>
+                        <div class="space-y-1">
+                            <a href="{% url 'institution:profile' %}" class="relative flex items-center gap-3 px-6 py-2.5 rounded-xl transition-all duration-300 group
+                        {% if request.resolver_match.url_name == 'profile' %} 
+                            bg-brand-500/10 border border-brand-500/20 text-white 
+                        {% else %} 
+                            text-slate-400 hover:text-white hover:bg-white/5 border border-transparent 
+                        {% endif %}">
+
+                                {% if request.resolver_match.url_name == 'profile' %}
+                                <span
+                                    class="absolute left-2 w-1 h-4 bg-brand-500 rounded-full shadow-[0_0_10px_#8b5cf6]"></span>
+                                {% endif %}
+
+                                <i
+                                    class="fa-solid fa-circle-user text-base {% if request.resolver_match.url_name == 'profile' %} text-brand-400 {% else %} group-hover:text-brand-400 {% endif %}"></i>
+                                <span class="font-bold text-sm">{{ institution.abbreviation|default:"User" }}
+                                    Profile</span>
+                            </a>
+                        </div>
+                    </div>
+                </nav>
+
+                <div class="p-4 shrink-0 mt-auto mb-2 lg:mb-4">
+                    <div
+                        class="relative overflow-hidden group bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-4 flex flex-col gap-3 transition-all hover:border-white/20">
+                        <div class="flex items-center gap-3">
+                            <div class="relative flex-shrink-0">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center border border-white/20 shadow-lg">
+                                    <span class="text-[11px] font-black text-white uppercase">
+                                        {{ institution.abbreviation|default:"EDU" }}</span>
+                                </div>
+                                <div
+                                    class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-[#0a0a14] rounded-full">
+                                </div>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <h4 class="text-[11px] font-black text-white truncate tracking-tight mb-0.5">
+                                    {{ institution.name|default:"Main Campus" }}
+                                </h4>
+                                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none">
+                                    Admin</p>
+                            </div>
+                        </div>
+
+                        <div class="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+                        <a href="{% url 'logout' %}"
+                            class="group/btn relative flex items-center justify-between px-4 py-2.5 rounded-xl bg-rose-500/5 hover:bg-rose-500 border border-rose-500/20 hover:border-rose-500 transition-all duration-300">
+                            <span
+                                class="text-[9px] font-black uppercase tracking-widest text-rose-400 group-hover/btn:text-white">Logout</span>
+                            <i
+                                class="fa-solid fa-power-off text-[10px] text-rose-500 group-hover/btn:text-white transition-colors"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <header class="h-20 flex items-center justify-between px-8 shrink-0">
+                <div class="flex items-center gap-4">
+                    <button onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full')"
+                        class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl glass-card">
+                        <i class="fa-solid fa-bars-staggered text-purple-600"></i>
+                    </button>
+                    <h1 class="text-xl font-black dark:text-white uppercase tracking-tight">Registry <span
+                            class="text-brand-500">Protocol</span></h1>
+                </div>
+                <button id="theme-switch"
+                    class="w-12 h-12 rounded-2xl glass-card flex items-center justify-center hover:scale-105 transition-all">
+                    <i id="theme-icon" class="fa-solid fa-moon text-brand-600 dark:text-amber-400 text-lg"></i>
+                </button>
+            </header>
+
+            <div class="flex-1 overflow-y-auto space-y-6 px-4 lg:px-8 pb-10">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-5xl mx-auto p-4">
+                    <button onclick="toggleSection('student-form-section')"
+                        class="group relative flex items-center gap-5 p-5 rounded-[1.75rem] bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-white/5 text-left transition-all duration-500 hover:border-emerald-500/50 hover:shadow-[0_15px_40px_-12px_rgba(16,185,129,0.2)] overflow-hidden">
+
+                        <div
+                            class="absolute -inset-px rounded-[1.75rem] bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        </div>
+
+                        <div class="relative flex-shrink-0">
+                            <div
+                                class="absolute inset-0 bg-emerald-400 blur-xl opacity-0 group-hover:opacity-30 group-hover:animate-pulse transition-opacity duration-700">
+                            </div>
+                            <div
+                                class="relative w-14 h-14 rounded-2xl bg-slate-50 dark:bg-emerald-500/10 border border-slate-200 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 shadow-inner">
+                                <i class="fa-solid fa-plus text-xl"></i>
+                            </div>
+                        </div>
+
+                        <div class="relative z-10 flex-grow">
+                            <h3
+                                class="font-black text-slate-900 dark:text-white text-lg tracking-tight leading-none group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                Manual Entry
+                            </h3>
+                            <p
+                                class="text-slate-500 dark:text-slate-400 text-xs font-medium mt-1 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
+                                Individual student profiles.
+                            </p>
+
+                            <div
+                                class="flex items-center gap-2 mt-2 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] uppercase tracking-wider">
+                                <span class="translate-x-0 group-hover:translate-x-1 transition-transform">Get
+                                    Started</span>
+                                <i
+                                    class="fa-solid fa-arrow-right opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
+                            </div>
+                        </div>
+
+                        <div
+                            class="absolute -top-2 -right-2 p-4 opacity-[0.03] group-hover:opacity-[0.08] group-hover:rotate-12 transition-all duration-1000">
+                            <i class="fa-solid fa-pen-nib text-6xl text-emerald-900 dark:text-white"></i>
+                        </div>
+                    </button>
+
+                    <button onclick="toggleSection('import-section')"
+                        class="group relative flex items-center gap-5 p-5 rounded-[1.75rem] bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-white/5 text-left transition-all duration-500 hover:border-indigo-500/50 hover:shadow-[0_15px_40px_-12px_rgba(99,102,241,0.25)] overflow-hidden">
+
+                        <div
+                            class="absolute -inset-px rounded-[1.75rem] bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        </div>
+
+                        <div class="relative flex-shrink-0">
+                            <div
+                                class="absolute inset-0 bg-indigo-400 blur-xl opacity-0 group-hover:opacity-30 group-hover:animate-pulse transition-opacity duration-700">
+                            </div>
+                            <div
+                                class="relative w-14 h-14 rounded-2xl bg-slate-50 dark:bg-indigo-500/10 border border-slate-200 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-inner">
+                                <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                            </div>
+                        </div>
+
+                        <div class="relative z-10 flex-grow">
+                            <h3
+                                class="font-black text-slate-900 dark:text-white text-lg tracking-tight leading-none group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                Bulk Sync
+                            </h3>
+                            <p
+                                class="text-slate-500 dark:text-slate-400 text-xs font-medium mt-1 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
+                                CSV, XLSX, or JSON upload.
+                            </p>
+
+                            <div
+                                class="flex items-center gap-2 mt-2 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] uppercase tracking-wider">
+                                <span class="translate-x-0 group-hover:translate-x-1 transition-transform">Upload
+                                    Data</span>
+                                <i
+                                    class="fa-solid fa-arrow-right opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
+                            </div>
+                        </div>
+
+                        <div
+                            class="absolute -top-2 -right-2 p-4 opacity-[0.03] group-hover:opacity-[0.08] group-hover:-rotate-12 transition-all duration-1000">
+                            <i class="fa-solid fa-database text-6xl text-indigo-900 dark:text-white"></i>
+                        </div>
+                    </button>
+                </div>
+
+                <div id="student-form-section" class="hidden animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div class="glass-card rounded-[2.5rem] p-6 lg:p-10 border-2 border-brand-500/10 shadow-2xl">
+                        <div class="flex items-center justify-between mb-8">
+                            <h3 class="text-sm font-black dark:text-white uppercase tracking-widest">Student Deployment
+                                Wizard</h3>
+                            <button onclick="toggleSection('student-form-section')"
+                                class="text-slate-400 hover:text-rose-500 transition-colors"><i
+                                    class="fa-solid fa-times"></i></button>
+                        </div>
+                        <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {% csrf_token %}
+                            <div class="space-y-1 manual-input"><label
+                                    class="text-[10px] font-black text-slate-400 uppercase ml-2">Assigned
+                                    Class</label>{{ form.class_obj }}</div>
+                            <div class="space-y-1 manual-input"><label
+                                    class="text-[10px] font-black text-slate-400 uppercase ml-2">Roll Number</label>
+                                {{ form.roll_no }}</div>
+                            <div class="space-y-1 manual-input"><label
+                                    class="text-[10px] font-black text-slate-400 uppercase ml-2">First Name</label>
+                                {{ form.first_name }}</div>
+                            <div class="space-y-1 manual-input"><label
+                                    class="text-[10px] font-black text-slate-400 uppercase ml-2">Last Name</label>
+                                {{ form.last_name }}</div>
+                            <div class="space-y-1 manual-input"><label
+                                    class="text-[10px] font-black text-slate-400 uppercase ml-2">Email Address</label>
+                                {{ form.email }}</div>
+                            <div class="space-y-1 manual-input">
+                                <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Portal
+                                    Password</label>
+                                {{ form.password }}
+                                <div class="grid grid-cols-3 gap-2 mt-3 ml-2">
+                                    <div id="v-len"
+                                        class="text-[8px] font-black uppercase text-rose-500 flex items-center gap-1"><i
+                                            class="fa-solid fa-circle text-[4px]"></i> 6+ Chars</div>
+                                    <div id="v-up"
+                                        class="text-[8px] font-black uppercase text-rose-500 flex items-center gap-1"><i
+                                            class="fa-solid fa-circle text-[4px]"></i> Uppercase</div>
+                                    <div id="v-low"
+                                        class="text-[8px] font-black uppercase text-rose-500 flex items-center gap-1"><i
+                                            class="fa-solid fa-circle text-[4px]"></i> Lowercase</div>
+                                    <div id="v-num"
+                                        class="text-[8px] font-black uppercase text-rose-500 flex items-center gap-1"><i
+                                            class="fa-solid fa-circle text-[4px]"></i> Number</div>
+                                    <div id="v-spl"
+                                        class="text-[8px] font-black uppercase text-rose-500 flex items-center gap-1"><i
+                                            class="fa-solid fa-circle text-[4px]"></i> Special</div>
+                                </div>
+                            </div>
+                            <button type="submit"
+                                class="md:col-span-2 py-4 bg-brand-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-brand-700 transition-all">Deploy
+                                Profile</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="import-section" class="hidden animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div class="glass-card rounded-[2.5rem] p-6 lg:p-10 border-2 border-indigo-500/10 shadow-2xl">
+                        <div class="flex items-center justify-between mb-8">
+                            <h3
+                                class="text-sm font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
+                                Bulk Synchronization</h3>
+                            <button onclick="toggleSection('import-section')"
+                                class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-times"></i></button>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                            <div class="space-y-4">
+                                <form method="POST" enctype="multipart/form-data" class="space-y-4">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="bulk_upload" value="true">
+
+                                    <!-- Enhanced File Upload Area -->
+                                    <label
+                                        class="group relative flex flex-col items-center justify-center w-full h-56 border-2 border-indigo-300 dark:border-indigo-500/30 border-dashed rounded-[2rem] cursor-pointer bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/10 dark:to-purple-900/10 hover:from-indigo-100 hover:to-purple-100 dark:hover:from-indigo-900/20 dark:hover:to-purple-900/20 transition-all duration-300 overflow-hidden">
+
+                                        <!-- Animated Background -->
+                                        <div
+                                            class="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                        </div>
+
+                                        <!-- Upload Icon with Animation -->
+                                        <div
+                                            class="relative mb-4 transform group-hover:scale-110 group-hover:-translate-y-2 transition-all duration-500">
+                                            <div
+                                                class="absolute inset-0 bg-indigo-400 blur-xl opacity-0 group-hover:opacity-30 animate-pulse">
+                                            </div>
+                                            <div
+                                                class="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl group-hover:shadow-2xl group-hover:shadow-indigo-500/50 transition-all duration-500">
+                                                <i
+                                                    class="fa-solid fa-cloud-arrow-up text-white text-2xl group-hover:animate-bounce"></i>
+                                            </div>
+                                        </div>
+
+                                        <!-- Text Content -->
+                                        <div class="text-center relative z-10">
+                                            <p id="file-label"
+                                                class="text-base font-black text-indigo-900 dark:text-indigo-300 uppercase tracking-tight mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-200 transition-colors">
+                                                Drop Dataset Here</p>
+                                            <p class="text-xs font-bold text-slate-500 dark:text-slate-400">or click to
+                                                browse files</p>
+                                            <div class="flex items-center justify-center gap-2 mt-3">
+                                                <span
+                                                    class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg text-[9px] font-black uppercase">CSV</span>
+                                                <span
+                                                    class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-[9px] font-black uppercase">XLSX</span>
+                                                <span
+                                                    class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg text-[9px] font-black uppercase">JSON</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Corner Accent -->
+                                        <div
+                                            class="absolute top-4 right-4 w-12 h-12 border-t-2 border-r-2 border-indigo-300 dark:border-indigo-500/30 rounded-tr-2xl opacity-50 group-hover:opacity-100 transition-opacity">
+                                        </div>
+                                        <div
+                                            class="absolute bottom-4 left-4 w-12 h-12 border-b-2 border-l-2 border-indigo-300 dark:border-indigo-500/30 rounded-bl-2xl opacity-50 group-hover:opacity-100 transition-opacity">
+                                        </div>
+
+                                        <input type="file" name="file" id="file-upload" class="hidden"
+                                            accept=".csv,.xlsx,.json" onchange="displayFileName(this)" />
+                                    </label>
+
+                                    <!-- Enhanced Execute Sync Button -->
+                                    <button type="submit"
+                                        class="group relative w-full py-5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl hover:shadow-2xl hover:shadow-indigo-500/50 transition-all duration-300 overflow-hidden">
+
+                                        <!-- Animated Background -->
+                                        <div
+                                            class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000">
+                                        </div>
+
+                                        <!-- Button Content -->
+                                        <span class="relative z-10 flex items-center justify-center gap-3">
+                                            <i class="fa-solid fa-bolt text-lg group-hover:animate-pulse"></i>
+                                            Execute Sync
+                                            <i
+                                                class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
+                                        </span>
+                                    </button>
+                                </form>
+
+                                <!-- Download Template Button -->
+                                <a href="{% static 'files/student_upload.xlsx' %}" download
+                                    class="group relative flex items-center justify-center gap-3 w-full py-4 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-2 border-emerald-200 dark:border-emerald-500/30 hover:border-emerald-400 dark:hover:border-emerald-400 rounded-2xl font-black text-sm uppercase tracking-wide text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 transition-all duration-300 shadow-lg hover:shadow-xl overflow-hidden">
+
+                                    <!-- Background Effect -->
+                                    <div
+                                        class="absolute inset-0 bg-gradient-to-r from-emerald-100/50 to-teal-100/50 dark:from-emerald-500/10 dark:to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    </div>
+
+                                    <!-- Icon -->
+                                    <div
+                                        class="relative z-10 w-10 h-10 rounded-xl bg-emerald-600 dark:bg-emerald-500 flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
+                                        <i class="fa-solid fa-download text-white text-sm"></i>
+                                    </div>
+
+                                    <!-- Text -->
+                                    <span class="relative z-10">Download Template</span>
+
+                                    <!-- File Type Badge -->
+                                    <span
+                                        class="relative z-10 px-2 py-1 bg-emerald-600 dark:bg-emerald-500 text-white rounded-lg text-[9px] font-black">XLSX</span>
+                                </a>
+                            </div>
+
+                            <!-- FAQs Section -->
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-1 h-8 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full">
+                                    </div>
+                                    <h4
+                                        class="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                                        Import Guidelines</h4>
+                                </div>
+
+                                <!-- FAQ 1: Protocol Headers -->
+                                <div
+                                    class="faq-item bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-2xl border-2 border-blue-200 dark:border-blue-500/20 overflow-hidden transition-all duration-300">
+                                    <button onclick="toggleFAQ(1)"
+                                        class="w-full p-4 flex items-center justify-between text-left group">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-8 h-8 rounded-xl bg-blue-600 dark:bg-blue-500 flex items-center justify-center">
+                                                <i class="fa-solid fa-table-columns text-white text-sm"></i>
+                                            </div>
+                                            <span
+                                                class="text-sm font-black text-blue-900 dark:text-blue-300 uppercase tracking-tight">What
+                                                are the required column headers?</span>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-down text-blue-600 dark:text-blue-400 transition-transform duration-300"
+                                            id="icon-faq-1"></i>
+                                    </button>
+                                    <div id="answer-faq-1"
+                                        class="hidden px-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div
+                                            class="pl-11 pr-8 py-4 bg-white dark:bg-slate-800 rounded-xl border border-blue-200 dark:border-blue-500/20">
+                                            <p
+                                                class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-3 tracking-widest">
+                                                Required Columns</p>
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <code
+                                                    class="text-[10px] p-2 bg-blue-50 dark:bg-slate-900 rounded-lg text-blue-600 dark:text-blue-400 font-bold border border-blue-200 dark:border-blue-500/20">Roll No</code>
+                                                <code
+                                                    class="text-[10px] p-2 bg-green-50 dark:bg-slate-900 rounded-lg text-green-600 dark:text-green-400 font-bold border border-green-200 dark:border-green-500/20">First Name</code>
+                                                <code
+                                                    class="text-[10px] p-2 bg-amber-50 dark:bg-slate-900 rounded-lg text-amber-600 dark:text-amber-400 font-bold border border-amber-200 dark:border-amber-500/20">Last Name</code>
+                                                <code
+                                                    class="text-[10px] p-2 bg-purple-50 dark:bg-slate-900 rounded-lg text-purple-600 dark:text-purple-400 font-bold border border-purple-200 dark:border-purple-500/20">Email</code>
+                                                <code
+                                                    class="text-[10px] p-2 bg-rose-50 dark:bg-slate-900 rounded-lg text-rose-600 dark:text-rose-400 font-bold border border-rose-200 dark:border-rose-500/20">Password</code>
+                                                <code
+                                                    class="text-[10px] p-2 bg-indigo-50 dark:bg-slate-900 rounded-lg text-indigo-600 dark:text-indigo-400 font-bold border border-indigo-200 dark:border-indigo-500/20">Class Name</code>
+                                            </div>
+                                            <p
+                                                class="text-xs font-bold text-slate-600 dark:text-slate-400 mt-3 leading-relaxed">
+                                                Your file must contain these exact column names (with spaces and title
+                                                case). Use <span
+                                                    class="text-indigo-600 dark:text-indigo-400 font-black">Class
+                                                    Name</span> (e.g., "Computer Science") instead of numeric IDs.
+                                                Supported formats:
+                                                <span class="text-blue-600 dark:text-blue-400 font-black">CSV</span>,
+                                                <span class="text-green-600 dark:text-green-400 font-black">XLSX</span>,
+                                                <span
+                                                    class="text-purple-600 dark:text-purple-400 font-black">JSON</span>.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- FAQ 2: Password Security Rules -->
+                                <div
+                                    class="faq-item bg-gradient-to-br from-rose-50 to-orange-50 dark:from-rose-900/10 dark:to-orange-900/10 rounded-2xl border-2 border-rose-200 dark:border-rose-500/20 overflow-hidden transition-all duration-300">
+                                    <button onclick="toggleFAQ(2)"
+                                        class="w-full p-4 flex items-center justify-between text-left group">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-8 h-8 rounded-xl bg-rose-600 dark:bg-rose-500 flex items-center justify-center">
+                                                <i class="fa-solid fa-shield-halved text-white text-sm"></i>
+                                            </div>
+                                            <span
+                                                class="text-sm font-black text-rose-900 dark:text-rose-300 uppercase tracking-tight">What
+                                                are the password requirements?</span>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-down text-rose-600 dark:text-rose-400 transition-transform duration-300"
+                                            id="icon-faq-2"></i>
+                                    </button>
+                                    <div id="answer-faq-2"
+                                        class="hidden px-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div
+                                            class="pl-11 pr-8 py-4 bg-white dark:bg-slate-800 rounded-xl border border-rose-200 dark:border-rose-500/20">
+                                            <div class="space-y-2 mb-3">
+                                                <div class="flex items-center gap-2">
+                                                    <i class="fa-solid fa-circle-check text-emerald-500 text-xs"></i>
+                                                    <span
+                                                        class="text-[10px] font-bold text-slate-700 dark:text-slate-300">Minimum
+                                                        <span class="text-rose-600 dark:text-rose-400 font-black">6+
+                                                            characters</span></span>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <i class="fa-solid fa-circle-check text-emerald-500 text-xs"></i>
+                                                    <span
+                                                        class="text-[10px] font-bold text-slate-700 dark:text-slate-300">At
+                                                        least <span
+                                                            class="text-indigo-600 dark:text-indigo-400 font-black">1
+                                                            uppercase</span> letter</span>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <i class="fa-solid fa-circle-check text-emerald-500 text-xs"></i>
+                                                    <span
+                                                        class="text-[10px] font-bold text-slate-700 dark:text-slate-300">At
+                                                        least <span
+                                                            class="text-blue-600 dark:text-blue-400 font-black">1
+                                                            lowercase</span> letter</span>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <i class="fa-solid fa-circle-check text-emerald-500 text-xs"></i>
+                                                    <span
+                                                        class="text-[10px] font-bold text-slate-700 dark:text-slate-300">At
+                                                        least <span
+                                                            class="text-purple-600 dark:text-purple-400 font-black">1
+                                                            digit</span> (0-9)</span>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <i class="fa-solid fa-circle-check text-emerald-500 text-xs"></i>
+                                                    <span
+                                                        class="text-[10px] font-bold text-slate-700 dark:text-slate-300">At
+                                                        least <span
+                                                            class="text-fuchsia-600 dark:text-fuchsia-400 font-black">1
+                                                            special char</span> (!@#$%^&*)</span>
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="p-3 bg-rose-50 dark:bg-rose-900/20 rounded-xl border border-rose-200 dark:border-rose-500/20">
+                                                <p
+                                                    class="text-[9px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider mb-1">
+                                                    Valid Example:</p>
+                                                <code
+                                                    class="text-[11px] font-mono font-black text-slate-700 dark:text-slate-300">Secure@123</code>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- FAQ 3: Upload Limits -->
+                                <div
+                                    class="faq-item bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 rounded-2xl border-2 border-emerald-200 dark:border-emerald-500/20 overflow-hidden transition-all duration-300">
+                                    <button onclick="toggleFAQ(3)"
+                                        class="w-full p-4 flex items-center justify-between text-left group">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-8 h-8 rounded-xl bg-emerald-600 dark:bg-emerald-500 flex items-center justify-center">
+                                                <i class="fa-solid fa-users text-white text-sm"></i>
+                                            </div>
+                                            <span
+                                                class="text-sm font-black text-emerald-900 dark:text-emerald-300 uppercase tracking-tight">How
+                                                many students per upload?</span>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-down text-emerald-600 dark:text-emerald-400 transition-transform duration-300"
+                                            id="icon-faq-3"></i>
+                                    </button>
+                                    <div id="answer-faq-3"
+                                        class="hidden px-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div
+                                            class="pl-11 pr-8 py-3 bg-white dark:bg-slate-800 rounded-xl border border-emerald-200 dark:border-emerald-500/20">
+                                            <p
+                                                class="text-xs font-bold text-slate-700 dark:text-slate-300 leading-relaxed">
+                                                Upload up to <span
+                                                    class="text-emerald-600 dark:text-emerald-400 font-black">1,000
+                                                    students</span> per batch.
+                                                Processing speed: <span
+                                                    class="text-indigo-600 dark:text-indigo-400 font-black">~50
+                                                    records/second</span>.
+                                                For larger datasets, split into multiple files.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- FAQ 4: Update vs Create -->
+                                <div
+                                    class="faq-item bg-gradient-to-br from-purple-50 to-fuchsia-50 dark:from-purple-900/10 dark:to-fuchsia-900/10 rounded-2xl border-2 border-purple-200 dark:border-purple-500/20 overflow-hidden transition-all duration-300">
+                                    <button onclick="toggleFAQ(4)"
+                                        class="w-full p-4 flex items-center justify-between text-left group">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-8 h-8 rounded-xl bg-purple-600 dark:bg-purple-500 flex items-center justify-center">
+                                                <i class="fa-solid fa-rotate text-white text-sm"></i>
+                                            </div>
+                                            <span
+                                                class="text-sm font-black text-purple-900 dark:text-purple-300 uppercase tracking-tight">What
+                                                happens with duplicate records?</span>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-down text-purple-600 dark:text-purple-400 transition-transform duration-300"
+                                            id="icon-faq-4"></i>
+                                    </button>
+                                    <div id="answer-faq-4"
+                                        class="hidden px-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div
+                                            class="pl-11 pr-8 py-3 bg-white dark:bg-slate-800 rounded-xl border border-purple-200 dark:border-purple-500/20">
+                                            <p
+                                                class="text-xs font-bold text-slate-700 dark:text-slate-300 leading-relaxed">
+                                                The system <span
+                                                    class="text-rose-600 dark:text-rose-400 font-black">only creates
+                                                    new</span> student records.
+                                                Duplicate <span
+                                                    class="text-purple-600 dark:text-purple-400 font-black">roll
+                                                    numbers</span> or
+                                                <span class="text-blue-600 dark:text-blue-400 font-black">emails</span>
+                                                will be rejected.
+                                                Invalid passwords trigger <span
+                                                    class="text-orange-600 dark:text-orange-400 font-black">row
+                                                    rejection</span> with detailed error logs.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="glass-card animate-in fade-in zoom-in duration-700 rounded-[3rem] overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/50 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative group/card">
+
+                    <div
+                        class="absolute -top-24 -right-24 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl group-hover/card:bg-brand-500/20 transition-all duration-1000">
+                    </div>
+
+                    <div
+                        class="relative p-6 md:p-10 border-b border-slate-200/50 dark:border-white/5 bg-white/40 dark:bg-slate-800/40">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-4">
+                                    <div class="flex -space-x-2">
+                                        <div class="w-3 h-8 bg-brand-600 rounded-full transform -rotate-12"></div>
+                                        <div class="w-3 h-8 bg-brand-400 rounded-full transform rotate-12"></div>
+                                    </div>
+                                    <h2
+                                        class="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">
+                                        Active <span class="text-brand-600">Directory</span>
+                                    </h2>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="flex items-center gap-2 px-3 py-1 bg-brand-500/10 rounded-full border border-brand-500/20">
+                                        <span class="relative flex h-2 w-2">
+                                            <span
+                                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+                                        </span>
+                                        <p
+                                            class="text-[10px] text-brand-700 dark:text-brand-300 font-black uppercase tracking-widest">
+                                            Live System: <span id="total-counter">{{ students|length }}</span> Objects
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+                                <div class="relative w-full sm:w-52 group">
+                                    <select id="class-filter" {% if not students %}disabled{% endif %}
+                                        class="w-full pl-5 pr-10 py-4 bg-white/50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-[11px] font-black uppercase tracking-wider focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all appearance-none cursor-pointer shadow-inner {% if not students %}opacity-50 cursor-not-allowed{% endif %}">
+                                        <option value="all">Global Divisions</option>
+                                        {% for class_item in classes %}
+                                        <option value="{{ class_item.class_name|lower }}">{{ class_item.class_name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <i
+                                        class="fa-solid fa-filter absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-brand-500 pointer-events-none text-xs"></i>
+                                </div>
+
+                                <div class="relative w-full sm:w-96 group">
+                                    <i
+                                        class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-all"></i>
+                                    <input type="text" id="directory-search" {% if not students %}disabled{% endif %}
+                                        placeholder="Search Identity, Roll, or Email..."
+                                        class="w-full pl-12 pr-5 py-4 bg-white/50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-xs font-bold focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-inner {% if not students %}opacity-50 cursor-not-allowed{% endif %}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-hidden">
+                        <table class="w-full text-left border-separate border-spacing-0" id="student-table">
+                            <thead class="hidden md:table-header-group bg-slate-50/30 dark:bg-white/5">
+                                <tr>
+                                    <th
+                                        class="px-10 py-6 text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                                        Identity Profile</th>
+                                    <th
+                                        class="px-8 py-6 text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                                        Roll Index</th>
+                                    <th
+                                        class="px-8 py-6 text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                                        Division</th>
+                                    <th
+                                        class="px-10 py-6 text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] text-right">
+                                        Operations</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="student-body"
+                                class="block md:table-row-group divide-y divide-slate-100 dark:divide-white/5">
+                                {% for student in students %}
+                                <tr class="data-table-row group/row hover:bg-white/60 dark:hover:bg-brand-500/5 transition-all duration-300 block md:table-row relative overflow-hidden"
+                                    data-class="{{ student.class_obj|lower }}"
+                                    data-search="{{ student.first_name }} {{ student.last_name }} {{ student.roll_no }} {{ student.email }} {{ student.class_obj }}">
+
+                                    <td class="px-6 py-6 md:px-10 md:py-6 block md:table-cell relative z-10">
+                                        <div class="flex items-center gap-5">
+                                            <div class="relative shrink-0">
+                                                <div
+                                                    class="absolute inset-0 bg-current opacity-20 blur-lg group-hover/row:blur-xl transition-all">
+                                                </div>
+                                                <div
+                                                    class="w-14 h-14 md:w-12 md:h-12 rounded-2xl flex items-center justify-center text-white font-black text-base shadow-lg uppercase transform group-hover/row:rotate-6 transition-all duration-500
+                                    {% cycle 'bg-gradient-to-br from-blue-400 to-blue-600' 'bg-gradient-to-br from-purple-400 to-purple-600' 'bg-gradient-to-br from-emerald-400 to-emerald-600' 'bg-gradient-to-br from-amber-400 to-amber-600' 'bg-gradient-to-br from-rose-400 to-rose-600' 'bg-gradient-to-br from-indigo-400 to-indigo-600' %}">
+                                                    {{ student.first_name|slice:":1" }}{{ student.last_name|slice:":1"}}
+
+
+                                                </div>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <p
+                                                    class="text-base font-black text-slate-900 dark:text-white capitalize tracking-tight group-hover/row:text-brand-600 transition-colors">
+                                                    {{ student.first_name }} {{ student.last_name }}
+                                                </p>
+                                                <p class="text-[11px] text-slate-400 font-bold font-mono">
+                                                    {{ student.email|default:"PROVISIONAL_USER" }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td class="px-6 py-2 md:py-6 block md:table-cell">
+                                        <div
+                                            class="mobile-group-box relative flex items-center justify-between p-3 md:p-0 rounded-2xl md:border-none border-2 border-dotted border-slate-200 dark:border-slate-700">
+                                            <span
+                                                class="md:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest">Roll
+                                                Index</span>
+                                            <span
+                                                class="inline-flex items-center px-4 py-2 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-xs font-black font-mono text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 shadow-sm">
+                                                #{{ student.roll_no }}
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    <td class="px-6 py-2 md:py-6 block md:table-cell">
+                                        <div
+                                            class="mobile-group-box relative flex items-center justify-between p-3 md:p-0 rounded-2xl md:border-none border-2 border-dotted border-slate-200 dark:border-slate-700 mt-2 md:mt-0">
+                                            <span
+                                                class="md:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest">Division</span>
+                                            <div
+                                                class="flex items-center gap-3 px-4 py-2 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-white/10">
+                                                <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+                                                <span
+                                                    class="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-tighter">
+                                                    {{ student.class_obj }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td class="px-6 py-6 md:px-10 md:py-6 block md:table-cell text-right">
+                                        <div class="flex items-center justify-end gap-4 mt-3 md:mt-0">
+                                            <button
+                                                onclick="openEditModal('{{ student.id }}', '{{ student.roll_no }}', '{{ student.first_name }}', '{{ student.last_name }}', '{{ student.email }}', '{{ student.password }}', '{{ student.class_obj.id }}', '{{ student.class_obj.class_name }}')"
+                                                class="flex-1 md:flex-none h-12 w-full md:w-11 rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-white/5 flex items-center justify-center text-indigo-600 dark:text-indigo-400 hover:text-brand-500 hover:border-brand-500 transition-all">
+                                                <i class="fa-solid fa-pen-to-square text-sm"></i>
+                                            </button>
+                                            <button
+                                                onclick="openDeleteModal('{{ student.id }}', '{{ student.first_name }} {{ student.last_name }}')"
+                                                class="flex-1 md:flex-none h-12 w-full md:w-11 rounded-2xl bg-white dark:bg-slate-800 border-2 border-rose-50 dark:border-rose-900/10 flex items-center justify-center text-rose-600 dark:text-rose-400 hover:text-rose-500 hover:border-rose-500 transition-all">
+                                                <i class="fa-solid fa-trash-can text-sm"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr class="block md:table-row w-full">
+                                    <td colspan="4" class="block md:table-cell w-full py-12 text-center">
+                                        <div class="flex flex-col items-center justify-center">
+                                            <div
+                                                class="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-white/5 flex items-center justify-center mb-4 border-2 border-dashed border-slate-200 dark:border-white/10">
+                                                <i class="fa-solid fa-user-slash text-2xl text-slate-300"></i>
+                                            </div>
+                                            <h3 class="text-base font-black text-slate-800 dark:text-white uppercase">No
+                                                Registered Students</h3>
+                                            <p class="text-xs text-slate-400 mt-1 font-medium">Get started by adding a
+                                                new student profile</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="no-results-row"
+                        class="empty-state-hidden py-12 text-center animate-in fade-in slide-in-from-bottom-5">
+                        <div
+                            class="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-white/5 flex items-center justify-center mb-4 mx-auto border-2 border-dashed border-slate-200 dark:border-white/10">
+                            <i class="fa-solid fa-fingerprint text-2xl text-slate-300 animate-bounce"></i>
+                        </div>
+                        <h3 class="text-base font-black text-slate-800 dark:text-white uppercase">No Identity Found</h3>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Delete Confirmation Modal (Termination Protocol) -->
+    <div id="delete-modal"
+        class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+        <div
+            class="glass-card rounded-[2.5rem] p-8 max-w-md w-full border border-white/20 shadow-2xl bg-white/95 dark:bg-slate-900/95 animate-in zoom-in slide-in-from-bottom-4 duration-500 overflow-hidden relative">
+
+            <!-- Security Pattern Overlay -->
+            <div class="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none">
+                <div class="absolute inset-0"
+                    style="background-image: radial-gradient(#ef4444 0.5px, transparent 0.5px); background-size: 10px 10px;">
+                </div>
+            </div>
+
+            <div class="relative z-10">
+                <!-- Status Badge -->
+                <div class="flex justify-center mb-6">
+                    <div
+                        class="px-4 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                        <span
+                            class="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">Termination
+                            Protocol</span>
+                    </div>
+                </div>
+
+                <!-- Warning Icon -->
+                <div class="flex justify-center mb-8">
+                    <div class="relative group">
+                        <div
+                            class="absolute inset-0 bg-rose-500 blur-2xl opacity-20 group-hover:opacity-40 transition-opacity">
+                        </div>
+                        <div
+                            class="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center shadow-xl shadow-rose-500/30 transform group-hover:scale-110 transition-transform duration-500">
+                            <i class="fa-solid fa-user-slash text-white text-3xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="text-center space-y-2 mb-8">
+                    <h3 class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Destructive
+                        Action</h3>
+                    <p class="text-sm font-bold text-slate-500 dark:text-slate-400 leading-relaxed px-4">
+                        You are about to permanently purge <span id="student-name-display"
+                            class="text-rose-600 dark:text-rose-400 font-black"></span> from the system records.
+                    </p>
+                </div>
+
+                <!-- Danger Alert Box -->
+                <div
+                    class="bg-rose-50 dark:bg-rose-500/5 border border-rose-200 dark:border-rose-500/20 rounded-2xl p-4 mb-8 flex gap-3 items-start">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-500 mt-0.5"></i>
+                    <p class="text-[11px] font-bold text-rose-700 dark:text-rose-300 leading-snug">
+                        Warning: This operation is irreversible. All academic data associated with this profile will be
+                        disconnected.
+                    </p>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-col gap-3">
+                    <form id="delete-form" method="POST" action="" class="w-full">
+                        {% csrf_token %}
+                        <button type="submit"
+                            class="w-full py-4 bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-rose-500/30 hover:shadow-xl hover:shadow-rose-500/40 transform hover:-translate-y-0.5 transition-all">
+                            Terminate Profile
+                        </button>
+                    </form>
+
+                    <button onclick="closeDeleteModal()"
+                        class="w-full py-4 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-200 dark:hover:bg-white/10 transition-all border border-slate-200 dark:border-white/5">
+                        Abort Action
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Student Modal -->
+    <div id="edit-modal"
+        class="fixed inset-0 z-[150] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+        <div
+            class="glass-card w-full max-w-2xl rounded-[2.5rem] p-5 lg:p-6 border border-white/20 shadow-2xl bg-white/90 dark:bg-slate-900/90 animate-slide-up max-h-[90vh] overflow-y-auto custom-scrollbar">
+
+            <div class="flex items-center justify-between mb-6 pb-3 border-b border-slate-100 dark:border-white/5">
+                <div>
+                    <h3 class="font-black text-slate-800 dark:text-white uppercase text-xs tracking-widest">Update
+                        Entity Protocol</h3>
+                    <p class="text-[10px] text-slate-400 uppercase mt-1">Modifying System ID: <span id="display-id"
+                            class="text-brand-500">#0</span></p>
+                </div>
+                <button type="button" onclick="closeEditModal()"
+                    class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-rose-500 transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="edit-form" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% csrf_token %}
+
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Roll
+                        Number</label>
+                    <input type="text" name="roll_no" id="edit-roll-no" required
+                        class="w-full px-5 py-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none transition-all dark:text-white font-bold text-sm">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">First
+                        Name</label>
+                    <input type="text" name="first_name" id="edit-first-name" required
+                        class="w-full px-5 py-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none transition-all dark:text-white font-bold text-sm focus:ring-brand-500 transition-all">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Last
+                        Name</label>
+                    <input type="text" name="last_name" id="edit-last-name" required
+                        class="w-full px-5 py-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none transition-all dark:text-white font-bold text-sm focus:ring-brand-500 transition-all">
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center ml-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">System
+                            Email</label>
+                        <span class="text-[9px] font-black text-amber-500 uppercase tracking-tighter"><i
+                                class="fa-solid fa-lock mr-1"></i> Unique Identifier</span>
+                    </div>
+                    <input type="email" name="email" id="edit-email" required readonly
+                        class="w-full px-5 py-3 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-white/5 rounded-2xl cursor-not-allowed opacity-70 transition-all dark:text-slate-400 font-bold text-sm outline-none"
+                        title="Email cannot be modified as it is a unique system identifier">
+                </div>
+
+                <div class="space-y-2 md:col-span-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Assigned
+                        Division</label>
+                    <div class="relative group">
+                        <select name="class_obj" id="edit-class" required
+                            class="w-full px-5 py-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none transition-all dark:text-white font-bold text-sm appearance-none cursor-pointer">
+                            <option value="" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">Select
+                                Division</option>
+                            {% for class_item in classes %}
+                            <option value="{{ class_item.id }}"
+                                class="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
+                                {{ class_item.class_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="space-y-3 md:col-span-2 p-5 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                    <div class="flex justify-between items-center">
+                        <label class="text-[10px] font-black text-brand-500 uppercase tracking-widest">Security
+                            Credential</label>
+                        <span
+                            class="text-[9px] font-black bg-white dark:bg-slate-800 px-3 py-1 rounded-full shadow-sm text-slate-400 uppercase">
+                            <i class="fa-solid fa-lock text-[8px] mr-1"></i>REVEAL ON FOCUS
+                        </span>
+                    </div>
+
+                    <div class="relative group">
+                        <input type="password" name="password" id="edit-password"
+                            class="w-full px-5 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none transition-all dark:text-white font-bold text-sm"
+                            placeholder="Enter new security key">
+                        <div class="absolute right-4 top-4 text-slate-300">
+                            <i class="fa-solid fa-lock" id="edit-pass-icon"></i>
+                        </div>
+                    </div>
+
+                    <div id="edit-password-requirements" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                        <div id="edit-v-len"
+                            class="flex items-center gap-1.5 text-[8px] font-black uppercase text-slate-400 transition-all">
+                            <i class="fa-solid fa-shield"></i> 6+
+                        </div>
+                        <div id="edit-v-up"
+                            class="flex items-center gap-1.5 text-[8px] font-black uppercase text-slate-400 transition-all">
+                            <i class="fa-solid fa-font"></i> UPPER
+                        </div>
+                        <div id="edit-v-low"
+                            class="flex items-center gap-1.5 text-[8px] font-black uppercase text-slate-400 transition-all">
+                            <i class="fa-solid fa-italic"></i> LOWER
+                        </div>
+                        <div id="edit-v-num"
+                            class="flex items-center gap-1.5 text-[8px] font-black uppercase text-slate-400 transition-all">
+                            <i class="fa-solid fa-hashtag"></i> NUM
+                        </div>
+                        <div id="edit-v-spl"
+                            class="flex items-center gap-1.5 text-[8px] font-black uppercase text-slate-400 transition-all">
+                            <i class="fa-solid fa-percent"></i> SPEC
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2 flex gap-4 pt-2">
+                    <button type="button" onclick="closeEditModal()"
+                        class="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95">
+                        Abort
+                    </button>
+                    <button type="submit" id="edit-submit-btn"
+                        class="flex-[2] py-4 bg-brand-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-brand-500/20 hover:bg-brand-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Update Record <i class="fa-solid fa-rotate ml-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        // 1. Spotlight Effect
+        document.addEventListener('mousemove', (e) => {
+            const spotlight = document.getElementById('spotlight');
+            spotlight.style.setProperty('--x', `${e.clientX}px`);
+            spotlight.style.setProperty('--y', `${e.clientY}px`);
+        });
+
+        // 2. Notifications
+        document.querySelectorAll('.message-toast').forEach(toast => {
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-full');
+                setTimeout(() => toast.remove(), 500);
+            }, 5000);
+        });
+
+        // 3. Filtering Logic
+        const classFilter = document.getElementById('class-filter');
+        const searchInput = document.getElementById('directory-search');
+        const studentRows = document.getElementsByClassName('data-table-row');
+        const noResultsRow = document.getElementById('no-results-row');
+        const totalCounter = document.getElementById('total-counter');
+
+        function performFiltering() {
+            const selectedClass = classFilter.value.toLowerCase().trim();
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            let visibleCount = 0;
+
+            Array.from(studentRows).forEach(row => {
+                // Ensure we get clean strings from data attributes
+                const rowClass = (row.getAttribute('data-class') || "").toLowerCase().trim();
+                const rowSearchData = (row.getAttribute('data-search') || "").toLowerCase();
+
+                // Logical matching
+                const matchesClass = (selectedClass === 'all' || rowClass === selectedClass);
+                const matchesSearch = rowSearchData.includes(searchTerm);
+
+                if (matchesClass && matchesSearch) {
+                    row.style.display = "";
+                    visibleCount++;
+                } else {
+                    row.style.display = "none";
+                }
+            });
+
+            // Update Counter UI
+            if (totalCounter) totalCounter.textContent = visibleCount;
+
+            // Handle Empty State
+            if (visibleCount === 0) {
+                noResultsRow.classList.remove('empty-state-hidden');
+            } else {
+                noResultsRow.classList.add('empty-state-hidden');
+            }
+        }
+
+        classFilter.addEventListener('change', performFiltering);
+        searchInput.addEventListener('input', performFiltering);
+
+        // 4. Section Toggling
+        function toggleSection(id) {
+            const sections = ['student-form-section', 'import-section'];
+            sections.forEach(s => {
+                const el = document.getElementById(s);
+                if (s === id) {
+                    el.classList.toggle('hidden');
+                    if (!el.classList.contains('hidden')) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+        }
+
+        // 5. Theme Control
+        const themeBtn = document.getElementById('theme-switch');
+        const themeIcon = document.getElementById('theme-icon');
+        function updateThemeIcon(isDark) {
+            themeIcon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-lg' : 'fa-solid fa-moon text-brand-600 text-lg';
+        }
+        themeBtn.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            updateThemeIcon(isDark);
+        });
+
+        // 6. Next Roll AJAX
+        const classSelect = document.querySelector('select[name*="class_obj"]');
+        const rollInput = document.querySelector('input[name*="roll_no"]');
+        const nextRollBaseUrl = "{% url 'institution:get_next_roll' %}";
+        if (classSelect && rollInput) {
+            classSelect.addEventListener('change', function () {
+                const classId = this.value;
+                if (!classId) return;
+                rollInput.classList.add('animate-pulse-fast');
+                fetch(`${nextRollBaseUrl}?class_id=${classId}`)
+                    .then(res => res.json())
+                    .then(data => { if (data.next_roll) rollInput.value = data.next_roll; })
+                    .finally(() => rollInput.classList.remove('animate-pulse-fast'));
+            });
+        }
+
+        // 7. Password Logic
+        const pwdInput = document.querySelector('input[type="password"]');
+        pwdInput?.addEventListener('input', function () {
+            const val = this.value;
+            const checks = {
+                'v-len': val.length >= 6, 'v-up': /[A-Z]/.test(val),
+                'v-low': /[a-z]/.test(val), 'v-num': /[0-9]/.test(val),
+                'v-spl': /[!@#$%^&*]/.test(val)
+            };
+            for (const [id, passed] of Object.entries(checks)) {
+                const el = document.getElementById(id);
+                if (passed) el.classList.replace('text-rose-500', 'text-emerald-500');
+                else el.classList.replace('text-emerald-500', 'text-rose-500');
+            }
+        });
+
+        // 8. Avatar Colors
+        function assignAvatarColors() {
+            const colors = [
+                'from-brand-500 to-accent-indigo shadow-brand-500/20',
+                'from-accent-fuchsia to-brand-600 shadow-fuchsia-500/20',
+                'from-accent-rose to-brand-500 shadow-rose-500/20',
+                'from-accent-emerald to-accent-indigo shadow-emerald-500/20',
+                'from-accent-amber to-brand-700 shadow-amber-500/20',
+                'from-indigo-500 to-purple-600 shadow-indigo-500/20'
+            ];
+            document.querySelectorAll('.avatar-box').forEach((box, index) => {
+                box.className += ` bg-gradient-to-br ${colors[index % colors.length]}`;
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            assignAvatarColors();
+            updateThemeIcon(document.documentElement.classList.contains('dark'));
+        });
+
+        const sidebar = document.getElementById('sidebar');
+        const menuBtn = document.getElementById('menuBtn');
+        const closeBtn = document.getElementById('close-sidebar');
+
+
+        function openSidebar() {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+            setTimeout(() => overlay.style.opacity = "1", 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            sidebar.classList.add('-translate-x-full');
+            overlay.style.opacity = "0";
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+            document.body.style.overflow = '';
+        }
+
+
+        // 2. X Button Close
+        closeBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeSidebar();
+        });
+
+
+        // 5. ESC Key & Links
+        sidebar.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => { if (window.innerWidth < 1024) closeSidebar(); });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !sidebar.classList.contains('-translate-x-full')) closeSidebar();
+        });
+
+        // 9. FAQ Toggle Function
+        function toggleFAQ(faqNumber) {
+            const answer = document.getElementById(`answer-faq-${faqNumber}`);
+            const icon = document.getElementById(`icon-faq-${faqNumber}`);
+
+            if (answer.classList.contains('hidden')) {
+                answer.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                answer.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // 10. Display File Name Function
+        function displayFileName(input) {
+            const fileLabel = document.getElementById('file-label');
+            if (input.files && input.files[0]) {
+                const fileName = input.files[0].name;
+                const fileSize = (input.files[0].size / 1024).toFixed(2); // Size in KB
+                fileLabel.innerHTML = `<i class="fa-solid fa-file-circle-check mr-2"></i>${fileName} <span class="text-xs">(${fileSize} KB)</span>`;
+                fileLabel.classList.add('text-emerald-600', 'dark:text-emerald-400');
+                fileLabel.classList.remove('text-indigo-900', 'dark:text-indigo-300');
+            } else {
+                fileLabel.textContent = 'Drop Dataset Here';
+                fileLabel.classList.remove('text-emerald-600', 'dark:text-emerald-400');
+                fileLabel.classList.add('text-indigo-900', 'dark:text-indigo-300');
+            }
+        }
+
+        // 11. Delete Modal Functions
+        function openDeleteModal(studentId, studentName) {
+            const modal = document.getElementById('delete-modal');
+            const form = document.getElementById('delete-form');
+            const nameDisplay = document.getElementById('student-name-display');
+
+            // Set the student name in the modal
+            nameDisplay.textContent = studentName;
+
+            // Set the form action to the delete URL
+            form.action = `/institution/student/delete/${studentId}/`;
+
+            // Show the modal
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('delete-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeDeleteModal();
+            }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('delete-modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'delete-modal') {
+                closeDeleteModal();
+            }
+        });
+
+        // 12. Edit Modal Functions
+        function openEditModal(studentId, rollNo, firstName, lastName, email, password, classId, className) {
+            const modal = document.getElementById('edit-modal');
+            const form = document.getElementById('edit-form');
+
+            // Populate form fields
+            document.getElementById('display-id').innerText = `#${studentId}`;
+            document.getElementById('edit-roll-no').value = rollNo;
+            document.getElementById('edit-first-name').value = firstName;
+            document.getElementById('edit-last-name').value = lastName;
+            document.getElementById('edit-email').value = email;
+            document.getElementById('edit-class').value = classId;
+
+            // Populate password field
+            document.getElementById('edit-password').value = password;
+            document.getElementById('edit-password').type = 'password';
+
+            // Reset password requirements
+            runValidation(password);
+
+            // Set form action
+            form.action = `/institution/student/edit/${studentId}/`;
+
+            // Show modal
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('edit-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = '';
+
+            // Reset password field
+            document.getElementById('edit-password').value = '';
+            document.getElementById('edit-password').type = 'password';
+        }
+
+        // Toggle password visibility
+        function toggleEditPasswordVisibility() {
+            const passwordInput = document.getElementById('edit-password');
+            const passwordIcon = document.getElementById('edit-password-icon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordIcon.className = 'fa-solid fa-eye-slash text-slate-600 dark:text-slate-400 text-sm';
+            } else {
+                passwordInput.type = 'password';
+                passwordIcon.className = 'fa-solid fa-eye text-slate-600 dark:text-slate-400 text-sm';
+            }
+        }
+
+        const editPwdInput = document.getElementById('edit-password');
+        const editPasswordRequirements = document.getElementById('edit-password-requirements');
+
+        /**
+         * Real-time Password Validation
+         */
+        function runValidation(v) {
+            const checks = {
+                'edit-v-len': v.length >= 6,
+                'edit-v-up': /[A-Z]/.test(v),
+                'edit-v-low': /[a-z]/.test(v),
+                'edit-v-num': /[0-9]/.test(v),
+                'edit-v-spl': /[!@#$%^&*]/.test(v)
+            };
+
+            const editSubmit = document.getElementById('edit-submit-btn');
+
+            for (const [id, passed] of Object.entries(checks)) {
+                const el = document.getElementById(id);
+                if (!el) continue;
+
+                if (passed) {
+                    el.className = "flex items-center gap-1.5 text-[8px] font-black uppercase text-emerald-500 transition-all";
+                } else {
+                    el.className = "flex items-center gap-1.5 text-[8px] font-black uppercase text-rose-500 transition-all";
+                }
+            }
+
+            // Enable/Disable submit button based on all checks passing
+            const allValid = Object.values(checks).every(Boolean);
+            if (editSubmit) {
+                editSubmit.disabled = !allValid;
+                if (allValid) {
+                    editSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    editSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        // Show password on focus (Reveal)
+        editPwdInput?.addEventListener('focus', function () {
+            this.type = 'text';
+            document.getElementById('edit-pass-icon').className = 'fa-solid fa-unlock text-indigo-500';
+        });
+
+        // Hide password on blur
+        editPwdInput?.addEventListener('blur', function () {
+            this.type = 'password';
+            document.getElementById('edit-pass-icon').className = 'fa-solid fa-lock text-slate-300';
+        });
+
+        // Validate password on input
+        editPwdInput?.addEventListener('input', (e) => runValidation(e.target.value));
+
+        // Close on click-outside
+        document.getElementById('edit-modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'edit-modal') closeEditModal();
+        });
+
+        // Close on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('edit-modal');
+                if (modal && !modal.classList.contains('hidden')) {
+                    closeEditModal();
+                }
+            }
+        });
+
+        // 15. Auto-Dismiss Flash Messages
+        window.addEventListener('load', () => {
+            const messages = document.querySelectorAll('.message-toast');
+            messages.forEach((msg, index) => {
+                // Only auto-dismiss non-error messages
+                if (!msg.classList.contains('border-rose-500/30')) {
+                    setTimeout(() => {
+                        msg.classList.add('opacity-0', 'translate-y-4');
+                        msg.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                        setTimeout(() => msg.remove(), 600);
+                    }, 5000 + (index * 200));
+                }
+            });
+        });
+    </script>
+    <div id="notification-container"
+        class="fixed bottom-8 right-6 z-[100] flex flex-col gap-3 w-[calc(100%-3rem)] max-w-sm">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="message-toast flex items-center p-4 rounded-2xl shadow-2xl border bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl animate-in slide-in-from-bottom duration-500
+                    {% if message.tags == 'success' %} border-emerald-500/30 text-emerald-600 dark:text-emerald-400
+                    {% else %} border-rose-500/30 text-rose-600 dark:text-rose-400 {% endif %} relative group/toast">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center mr-3
+                        {% if message.tags == 'success' %} bg-emerald-500/10 {% else %} bg-rose-500/10 {% endif %}">
+                <i
+                    class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}"></i>
+            </div>
+            <p class="text-xs font-black uppercase tracking-wider pr-6">{{ message }}</p>
+            <button
+                onclick="this.parentElement.classList.add('opacity-0', 'translate-y-4'); setTimeout(()=>this.parentElement.remove(), 600)"
+                class="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-all">
+                <i class="fa-solid fa-xmark text-[10px] text-slate-400"></i>
+            </button>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+</body>
+
+</html>
